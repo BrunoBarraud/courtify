@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Calendar, MapPin, User, CreditCard } from 'lucide-react'
+import { Home, Calendar, MapPin, User, CreditCard, Shield } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
@@ -11,6 +11,7 @@ export default function MobileNav() {
   const supabase = createClientComponentClient()
   const [userId, setUserId] = useState<string | null>(null)
   const [upcomingCount, setUpcomingCount] = useState<number>(0)
+  const [isAdmin, setIsAdmin] = useState<boolean>(false)
 
   useEffect(() => {
     let mounted = true
@@ -21,6 +22,14 @@ export default function MobileNav() {
         setUserId(user?.id ?? null)
 
         if (user?.id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+          if (!mounted) return
+          setIsAdmin((profile as { role?: string } | null)?.role === 'super_admin')
+
           const { count } = await supabase
             .from('bookings')
             .select('*', { count: 'exact', head: true })
@@ -31,6 +40,7 @@ export default function MobileNav() {
           setUpcomingCount(count || 0)
         } else {
           setUpcomingCount(0)
+          setIsAdmin(false)
         }
       } catch {
         // ignore
@@ -46,6 +56,7 @@ export default function MobileNav() {
     { href: '/bookings', label: 'Reservas', icon: Calendar },
     { href: '/venues', label: 'Canchas', icon: MapPin },
     { href: '/payments', label: 'Pagos', icon: CreditCard },
+    ...(isAdmin ? ([{ href: '/admin/users', label: 'Admin', icon: Shield }] as const) : ([] as const)),
     userId
       ? { href: '/perfil', label: 'Perfil', icon: User }
       : { href: '/auth/signin', label: 'Ingresar', icon: User },
@@ -53,7 +64,10 @@ export default function MobileNav() {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 w-full z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <ul className="grid grid-cols-4 pb-[env(safe-area-inset-bottom)]">
+      <ul className={[
+        'grid pb-[env(safe-area-inset-bottom)]',
+        isAdmin ? 'grid-cols-6' : 'grid-cols-5',
+      ].join(' ')}>
         {items.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           return (

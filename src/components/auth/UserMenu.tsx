@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut, User, Settings, ChevronDown } from 'lucide-react'
+import { LogOut, User, Settings, ChevronDown, Shield } from 'lucide-react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { toast } from 'sonner'
+import type { Database } from '@/types/database'
 
 // Importar componentes UI con rutas relativas
 import { Button } from '../ui/button'
@@ -33,6 +34,8 @@ export default function UserMenu() {
 
   const [user, setUser] = useState<User>(null)
   const [isLoading, setIsLoading] = useState(true)
+  type Role = Database['public']['Tables']['profiles']['Row']['role']
+  const [role, setRole] = useState<Role | null>(null)
   const supabase = createClientComponentClient()
 
   useEffect(() => {
@@ -42,6 +45,17 @@ export default function UserMenu() {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (mounted) setUser(user)
+        if (mounted && user?.id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+          const userRole = (profile as { role: Role } | null)?.role ?? null
+          if (mounted) setRole(userRole)
+        } else if (mounted) {
+          setRole(null)
+        }
       } catch (error) {
         console.error('Error al cargar el usuario:', error)
       } finally {
@@ -53,6 +67,16 @@ export default function UserMenu() {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (mounted) setUser(user)
+        if (mounted && user?.id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+          if (mounted) setRole((profile as any)?.role ?? null)
+        } else if (mounted) {
+          setRole(null)
+        }
       } catch (error) {
         console.error('Error al actualizar el estado de auth:', error)
       }
@@ -160,6 +184,12 @@ export default function UserMenu() {
             <Settings className="mr-2 h-4 w-4" />
             <span>Configuración</span>
           </DropdownMenuItem>
+          {role === 'super_admin' && (
+            <DropdownMenuItem onClick={() => router.push('/admin/users')}>
+              <Shield className="mr-2 h-4 w-4" />
+              <span>Admin</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="text-red-600">

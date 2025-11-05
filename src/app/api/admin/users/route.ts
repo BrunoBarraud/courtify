@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createServerClient } from '@/lib/supabase/client'
+import { createServerClient, createAdminClient } from '@/lib/supabase/client'
 
 async function requireSuperAdmin() {
   const supabase = createServerClient(() => cookies())
@@ -15,10 +15,11 @@ async function requireSuperAdmin() {
 }
 
 export async function GET(request: NextRequest) {
-  const { supabase, isSuper } = await requireSuperAdmin()
+  const { isSuper } = await requireSuperAdmin()
   if (!isSuper) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { data, error } = await supabase
+  const admin = createAdminClient()
+  const { data, error } = await admin
     .from('profiles')
     .select('id, email, role, created_at')
     .order('created_at', { ascending: false })

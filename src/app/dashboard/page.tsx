@@ -189,6 +189,23 @@ export default async function DashboardPage() {
 
         {/* Acciones rápidas */}
         <div className="grid gap-4 md:grid-cols-3 mt-8">
+          {profile && (profile as { role?: string }).role === 'super_admin' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Panel de Admin</CardTitle>
+                <CardDescription>
+                  Gestioná usuarios y configuración de la plataforma
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/admin/users">
+                  <Button className="w-full" variant="secondary">
+                    Ir a Administración
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardHeader>
               <CardDescription>
