@@ -57,7 +57,12 @@ export default function PaymentStartPage() {
         }
 
         // Stripe → redirigir a nuestro checkout con clientSecret asociado al booking
-        router.replace(`/payments/checkout?${bookingId ? `bookingId=${bookingId}` : `subscriptionId=${subscriptionId}`}`)
+        router.replace(
+          `/payments/checkout?${
+            bookingId ? `bookingId=${bookingId}` : `subscriptionId=${subscriptionId}`
+          }`
+        )
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         setError('Error al iniciar el pago')
         setLoading(false)
@@ -79,8 +84,12 @@ export default function PaymentStartPage() {
         <CardContent>
           {error ? (
             <div>
-              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md mb-4">{error}</div>
-              <Button onClick={() => router.back()} variant="outline">Volver</Button>
+              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md mb-4">
+                {error}
+              </div>
+              <Button onClick={() => router.back()} variant="outline">
+                Volver
+              </Button>
             </div>
           ) : (
             <div>{loading ? 'Preparando...' : 'Listo'}</div>
