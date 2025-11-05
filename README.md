@@ -1,72 +1,72 @@
-# Courtify - Sports Court Booking Platform
+# Courtify - Plataforma de Reservas de Canchas
 
-A comprehensive SaaS platform for managing sports court bookings, subscriptions, tournaments, and payments for clubs and complexes.
+Una plataforma SaaS integral para gestionar reservas de canchas, abonos, torneos y pagos para clubes y complejos deportivos.
 
-## 🚀 Features
+## 🚀 Funcionalidades
 
-### Core Functionality
-- **Online Booking System**: Real-time court availability and instant booking confirmation
-- **Multi-Venue Support**: Manage multiple locations from a single platform
-- **Payment Processing**: Integrated with Stripe and MercadoPago
-- **Subscription Management**: Flexible membership plans with credit-based bookings
-- **Tournament Management**: Organize and manage sports tournaments
-- **Automated Notifications**: Email and push notifications via SendGrid and Firebase Cloud Messaging
-- **Cancellation Policies**: Flexible refund rules based on cancellation timing
-- **Waitlist Management**: Automatic notifications when courts become available
-- **Invoice Generation**: Automated invoicing and receipt generation
+### Funcionalidades principales
+- **Reservas online**: Disponibilidad en tiempo real y confirmación inmediata
+- **Multi-sede**: Administrá múltiples ubicaciones desde una sola plataforma
+- **Pagos**: Integración con Stripe y Mercado Pago
+- **Abonos y membresías**: Planes flexibles con créditos para reservas
+- **Torneos**: Organización y gestión de torneos deportivos
+- **Notificaciones automáticas**: Email y push con SendGrid y Firebase Cloud Messaging
+- **Políticas de cancelación**: Reglas flexibles de reintegros según anticipación
+- **Lista de espera**: Avisos automáticos cuando haya disponibilidad
+- **Facturación**: Generación automática de comprobantes
 
-### User Roles
-- **Customers**: Book courts, manage subscriptions, join tournaments
-- **Venue Admins**: Manage courts, bookings, and venue settings
-- **Super Admins**: Platform-wide administration
+### Roles de usuario
+- **Clientes**: Reservan canchas, gestionan abonos, participan en torneos
+- **Administradores de sede**: Gestionan canchas, reservas y configuración de la sede
+- **Super Administradores**: Administración global de la plataforma
 
-## 🏗️ Architecture
+## 🏗️ Arquitectura
 
-### Tech Stack
+### Stack tecnológico
 - **Frontend**: Next.js 14 (App Router), React, TypeScript, TailwindCSS
-- **Backend**: Next.js API Routes
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
-- **Payments**: Stripe, MercadoPago
-- **Notifications**: SendGrid (Email), Firebase Cloud Messaging (Push)
-- **Testing**: Jest (Unit), Playwright (E2E)
+- **Backend**: Rutas API de Next.js
+- **Base de datos**: Supabase (PostgreSQL)
+- **Autenticación**: Supabase Auth
+- **Pagos**: Stripe, Mercado Pago
+- **Notificaciones**: SendGrid (Email), Firebase Cloud Messaging (Push)
+- **Testing**: Jest (Unitario), Playwright (E2E)
 
-### Design Patterns
-- **Observer Pattern**: Notification system with multiple channels (email, push, SMS)
-- **Strategy Pattern**: Payment processing with pluggable payment gateways
-- **Repository Pattern**: Data access layer abstraction
-- **Service Layer**: Business logic separation
+### Patrones de diseño
+- **Observer**: Sistema de notificaciones con múltiples canales (email, push, SMS)
+- **Strategy**: Procesamiento de pagos con pasarelas intercambiables
+- **Repository**: Abstracción de acceso a datos
+- **Service Layer**: Separación de la lógica de negocio
 
-## 📦 Installation
+## 📦 Instalación
 
-### Prerequisites
-- Node.js 18+ 
+### Requisitos previos
+- Node.js 18+
 - npm 9+
-- Supabase account
-- Stripe account
-- MercadoPago account (optional)
-- SendGrid account
-- Firebase project
+- Cuenta de Supabase
+- Cuenta de Stripe
+- Cuenta de Mercado Pago (opcional)
+- Cuenta de SendGrid
+- Proyecto de Firebase
 
-### Setup
+### Configuración
 
-1. **Clone the repository**
+1. **Clonar el repositorio**
 ```bash
 git clone <repository-url>
 cd courtify
 ```
 
-2. **Install dependencies**
+2. **Instalar dependencias**
 ```bash
 npm install
 ```
 
-3. **Set up environment variables**
+3. **Configurar variables de entorno**
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your credentials:
+Editá `.env` con tus credenciales:
 ```env
 # Application
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -97,116 +97,116 @@ FIREBASE_CLIENT_EMAIL=your_firebase_client_email
 NEXT_PUBLIC_FIREBASE_VAPID_KEY=your_firebase_vapid_key
 ```
 
-4. **Set up Supabase**
+4. **Configurar Supabase**
 
-Install Supabase CLI:
+Instalar Supabase CLI:
 ```bash
 npm install -g supabase
 ```
 
-Initialize Supabase:
+Inicializar Supabase:
 ```bash
 supabase init
 ```
 
-Link to your project:
+Vincular a tu proyecto:
 ```bash
 supabase link --project-ref your-project-ref
 ```
 
-Run migrations:
+Ejecutar migraciones:
 ```bash
 supabase db push
 ```
 
-5. **Run the development server**
+5. **Levantar el servidor de desarrollo**
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Abrí [http://localhost:3000](http://localhost:3000) en tu navegador.
 
 ## 🧪 Testing
 
-### Unit Tests
+### Tests unitarios
 ```bash
 npm test
 ```
 
-### E2E Tests
+### Tests E2E
 ```bash
 npm run test:e2e
 ```
 
-### E2E Tests with UI
+### Tests E2E con UI
 ```bash
 npm run test:e2e:ui
 ```
 
-## 📊 Database Schema
+## 📊 Esquema de base de datos
 
-### Main Tables
-- **profiles**: User profiles and roles
-- **venues**: Sports facilities/clubs
-- **courts**: Individual courts within venues
-- **bookings**: Court reservations
-- **payments**: Payment transactions
-- **invoices**: Generated invoices
-- **subscription_plans**: Membership plans
-- **user_subscriptions**: Active user subscriptions
-- **tournaments**: Tournament information
-- **promotions**: Discount codes and promotions
-- **notifications**: User notifications
-- **waitlist**: Court waitlist entries
-- **reviews**: Venue and court reviews
+### Tablas principales
+- **profiles**: Perfiles de usuario y roles
+- **venues**: Clubes/instalaciones deportivas
+- **courts**: Canchas dentro de cada sede
+- **bookings**: Reservas de canchas
+- **payments**: Transacciones de pago
+- **invoices**: Comprobantes generados
+- **subscription_plans**: Planes de membresía
+- **user_subscriptions**: Suscripciones activas por usuario
+- **tournaments**: Información de torneos
+- **promotions**: Códigos y promociones
+- **notifications**: Notificaciones a usuarios
+- **waitlist**: Lista de espera de canchas
+- **reviews**: Reseñas de sedes y canchas
 
-See `supabase/migrations/20250101000000_initial_schema.sql` for complete schema.
+Ver `supabase/migrations/20250101000000_initial_schema.sql` para el esquema completo.
 
-## 🔌 API Endpoints
+## 🔌 Endpoints API
 
-### Authentication
-- `POST /api/auth/signup` - Register new user
-- `POST /api/auth/signin` - Sign in user
-- `POST /api/auth/signout` - Sign out user
+### Autenticación
+- `POST /api/auth/signup` - Registrar usuario
+- `POST /api/auth/signin` - Iniciar sesión
+- `POST /api/auth/signout` - Cerrar sesión
 
-### Bookings
-- `GET /api/bookings` - Get user bookings
-- `POST /api/bookings` - Create new booking
-- `GET /api/bookings/[id]` - Get booking details
-- `POST /api/bookings/[id]/cancel` - Cancel booking
+### Reservas
+- `GET /api/bookings` - Obtener reservas del usuario
+- `POST /api/bookings` - Crear nueva reserva
+- `GET /api/bookings/[id]` - Obtener detalle de una reserva
+- `POST /api/bookings/[id]/cancel` - Cancelar reserva
 
-### Courts
-- `GET /api/courts` - List courts
-- `GET /api/courts/[id]` - Get court details
-- `GET /api/courts/[id]/availability` - Check availability
+### Canchas
+- `GET /api/courts` - Listar canchas
+- `GET /api/courts/[id]` - Obtener detalle de cancha
+- `GET /api/courts/[id]/availability` - Consultar disponibilidad
 
-### Payments
-- `POST /api/payments/create` - Create payment intent
-- `POST /api/payments/webhook` - Payment webhook handler
+### Pagos
+- `POST /api/payments/create` - Crear intento de pago
+- `POST /api/payments/webhook` - Handler de webhook de pagos
 
-### Venues
-- `GET /api/venues` - List venues
-- `GET /api/venues/[id]` - Get venue details
+### Sedes
+- `GET /api/venues` - Listar sedes
+- `GET /api/venues/[id]` - Obtener detalle de sede
 
-## 🎨 UI Components
+## 🎨 Componentes UI
 
-Built with Radix UI and TailwindCSS for a modern, accessible interface:
+Construido con Radix UI y TailwindCSS para una interfaz moderna y accesible:
 - Button, Card, Input, Label
 - Dialog, Dropdown, Select, Tabs
 - Toast notifications
-- Form components with validation
+- Formularios con validación
 
-## 🔐 Security
+## 🔐 Seguridad
 
-- Row Level Security (RLS) enabled on all tables
-- JWT-based authentication via Supabase
-- API route protection with session validation
-- Secure payment processing (PCI compliant via Stripe/MercadoPago)
-- Environment variable protection
+- Row Level Security (RLS) habilitado en todas las tablas
+- Autenticación basada en JWT vía Supabase
+- Protección de rutas API con validación de sesión
+- Procesamiento de pagos seguro (cumplimiento PCI vía Stripe/Mercado Pago)
+- Protección de variables de entorno
 
-## 🚀 Deployment
+## 🚀 Despliegue
 
-### Vercel (Recommended)
+### Vercel (Recomendado)
 ```bash
 npm install -g vercel
 vercel
@@ -218,76 +218,76 @@ docker build -t courtify .
 docker run -p 3000:3000 courtify
 ```
 
-### Environment Variables
-Ensure all environment variables are set in your deployment platform.
+### Variables de entorno
+Asegurate de configurar todas las variables en tu plataforma de despliegue.
 
-## 📝 Development Guidelines
+## 📝 Guías de desarrollo
 
-### Code Style
-- TypeScript strict mode enabled
-- ESLint for code quality
-- Prettier for formatting (recommended)
+### Estilo de código
+- TypeScript en modo estricto
+- ESLint para calidad de código
+- Prettier para formato (recomendado)
 
-### Git Workflow
+### Flujo de trabajo con Git
 ```bash
 git checkout -b feature/your-feature
 git commit -m "feat: add your feature"
 git push origin feature/your-feature
 ```
 
-### Commit Convention
-- `feat:` New feature
-- `fix:` Bug fix
-- `docs:` Documentation
-- `style:` Formatting
-- `refactor:` Code refactoring
+### Convención de commits
+- `feat:` Nueva funcionalidad
+- `fix:` Corrección de bug
+- `docs:` Documentación
+- `style:` Formato/estilo
+- `refactor:` Refactor de código
 - `test:` Tests
-- `chore:` Maintenance
+- `chore:` Mantenimiento
 
-## 📚 Documentation
+## 📚 Documentación
 
-### Service Layer
-- `BookingService`: Handles booking logic and availability
-- `PaymentService`: Manages payment processing with multiple gateways
-- `NotificationService`: Sends notifications via multiple channels
+### Capa de servicios
+- `BookingService`: Maneja lógica de reservas y disponibilidad
+- `PaymentService`: Gestiona pagos con múltiples pasarelas
+- `NotificationService`: Envía notificaciones por múltiples canales
 
-### Design Patterns
-- **Observer Pattern**: `NotificationService` with `EmailNotificationObserver` and `PushNotificationObserver`
-- **Strategy Pattern**: `PaymentService` with `StripePaymentStrategy` and `MercadoPagoPaymentStrategy`
+### Patrones de diseño
+- **Observer**: `NotificationService` con `EmailNotificationObserver` y `PushNotificationObserver`
+- **Strategy**: `PaymentService` con `StripePaymentStrategy` y `MercadoPagoPaymentStrategy`
 
-## 🤝 Contributing
+## 🤝 Contribuir
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+1. Hacé un fork del repositorio
+2. Creá tu rama de funcionalidad
+3. Commit de tus cambios
+4. Push a la rama
+5. Creá un Pull Request
 
-## 📄 License
+## 📄 Licencia
 
-This project is proprietary software. All rights reserved.
+Este proyecto es software propietario. Todos los derechos reservados.
 
-## 🆘 Support
+## 🆘 Soporte
 
-For support, email support@courtify.com or open an issue in the repository.
+Para soporte, escribí a support@courtify.com o abrí un issue en el repositorio.
 
 ## 🗺️ Roadmap
 
-- [ ] Mobile app (React Native)
-- [ ] Advanced analytics dashboard
-- [ ] Multi-language support
-- [ ] SMS notifications
-- [ ] Calendar integrations (Google Calendar, Outlook)
-- [ ] Equipment rental management
-- [ ] Coaching session booking
-- [ ] Loyalty points system
-- [ ] Social features (player matching)
+- [ ] App móvil (React Native)
+- [ ] Dashboard de analíticas avanzadas
+- [ ] Soporte multi-idioma
+- [ ] Notificaciones por SMS
+- [ ] Integraciones de calendario (Google Calendar, Outlook)
+- [ ] Gestión de alquiler de equipos
+- [ ] Reserva de clases/entrenamientos
+- [ ] Sistema de puntos/fidelidad
+- [ ] Funciones sociales (match entre jugadores)
 
-## 👥 Team
+## 👥 Equipo
 
-Built with ❤️ by the Courtify team.
+Hecho con ❤️ por el equipo de Courtify.
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: January 2025
+**Versión**: 1.0.0  
+**Última actualización**: Enero 2025
