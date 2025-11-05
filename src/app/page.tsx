@@ -11,34 +11,7 @@ import { Calendar, CreditCard, Trophy, Bell, MapPin, Users } from 'lucide-react'
 export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">Courtify</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/venues" className="text-sm font-medium hover:text-primary">
-              Sedes
-            </Link>
-            <Link href="/about" className="text-sm font-medium hover:text-primary">
-              Acerca de
-            </Link>
-            <Link href="/contact" className="text-sm font-medium hover:text-primary">
-              Contacto
-            </Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            <Link href="/auth/signin">
-              <Button variant="ghost">Ingresar</Button>
-            </Link>
-            <Link href="/auth/signup">
-              <Button>Comenzar</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      
 
       {/* Hero Section */}
       <section className="container flex flex-col items-center justify-center gap-4 py-24 md:py-32">

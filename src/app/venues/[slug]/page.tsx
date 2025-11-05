@@ -33,6 +33,14 @@ export default async function VenueDetailPage({ params }: Props) {
     .eq('is_active', true)
     .order('display_order', { ascending: true })
 
+  type Court = {
+    id: string
+    name: string
+    court_type: string
+    is_indoor: boolean
+    hourly_rate: number
+  }
+
   return (
     <div className="container py-10">
       <div className="mb-8">
@@ -67,14 +75,14 @@ export default async function VenueDetailPage({ params }: Props) {
         <CardContent>
           {courts && courts.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {courts.map((c: any) => (
+              {courts.map((c: Court) => (
                 <div key={c.id} className="p-4 border rounded-lg">
                   <div className="font-semibold mb-1">{c.name}</div>
                   <div className="text-sm text-muted-foreground mb-3">
                     Tipo: {c.court_type} • {c.is_indoor ? 'Techada' : 'Al aire libre'}
                   </div>
-                  <div className="text-sm font-medium mb-3">${'{'}c.hourly_rate{'}'} por hora</div>
-                  <Link href={`/bookings/new?venueId=${'{'}venue.id{'}'}&courtId=${'{'}c.id{'}'}`}>
+                  <div className="text-sm font-medium mb-3">${c.hourly_rate} por hora</div>
+                  <Link href={`/bookings/new?venueId=${venue.id}&courtId=${c.id}`}>
                     <Button className="w-full">Reservar</Button>
                   </Link>
                 </div>

@@ -72,7 +72,7 @@ export default async function VenuesPage() {
               <p className="line-clamp-3 text-sm text-muted-foreground mb-4">
                 {v.description ?? 'Sin descripción'}
               </p>
-              <Link href={`/bookings/new`}>
+              <Link href={`/venues/${v.slug}`}>
                 <Button className="w-full">Reservar</Button>
               </Link>
             </CardContent>

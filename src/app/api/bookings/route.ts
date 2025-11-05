@@ -6,13 +6,14 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createServerClient } from '@/lib/supabase/client'
+import { createServerClient, createAdminClient } from '@/lib/supabase/client'
 import { bookingService } from '@/lib/services/BookingService'
 import { createBookingSchema } from '@/lib/validations/booking'
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerClient(() => cookies())
+    const admin = createAdminClient()
     
     // Check authentication
     const { data: { session } } = await supabase.auth.getSession()
@@ -24,6 +25,26 @@ export async function POST(request: NextRequest) {
     
     // Validate input
     const validatedData = createBookingSchema.parse(body)
+
+    // Ensure profile exists to satisfy FK (bookings.user_id -> profiles.id)
+    const { data: existingProfile } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('id', session.user.id)
+      .single()
+
+    if (!existingProfile) {
+      // Use getUser to fetch a verified user object (email required by schema)
+      const { data: userData } = await supabase.auth.getUser()
+      const userEmail = userData?.user?.email || session.user.email
+      if (!userEmail) {
+        return NextResponse.json({ error: 'User email not found' }, { status: 400 })
+      }
+      await admin
+        .from('profiles')
+        .insert({ id: session.user.id, email: userEmail })
+        .throwOnError()
+    }
 
     // Create booking
     const booking = await bookingService.createBooking({

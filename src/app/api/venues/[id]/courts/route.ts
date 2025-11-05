@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createServerClient } from '@/lib/supabase/client'
+import { createServerClient, createAdminClient } from '@/lib/supabase/client'
 
 export async function GET(
   request: NextRequest,
@@ -59,6 +59,7 @@ export async function POST(
 ) {
   try {
     const supabase = createServerClient(() => cookies())
+    const admin = createAdminClient()
     
     // Check authentication
     const { data: { session } } = await supabase.auth.getSession()
@@ -66,22 +67,30 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is venue admin
-    const { data: venueAdmin } = await supabase
-      .from('venue_admins')
-      .select('*')
-      .eq('venue_id', params.id)
-      .eq('user_id', session.user.id)
+    // Check if user is super_admin or venue_admin for this venue
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
       .single()
 
-    if (!venueAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    let allowed = profile?.role === 'super_admin'
+    if (!allowed) {
+      // Use admin client to verify membership even if RLS hides it
+      const { data: venueAdmin } = await admin
+        .from('venue_admins')
+        .select('user_id')
+        .eq('venue_id', params.id)
+        .eq('user_id', session.user.id)
+        .single()
+      allowed = !!venueAdmin
     }
+    if (!allowed) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json()
 
-    // Create court
-    const { data: court, error } = await supabase
+    // Create court using admin client to avoid RLS issues
+    const { data: court, error } = await admin
       .from('courts')
       .insert({
         ...body,

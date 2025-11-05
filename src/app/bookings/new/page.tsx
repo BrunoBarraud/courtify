@@ -10,30 +10,68 @@ import { Label } from '@/components/ui/label'
 export default function NewBookingPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const venueId = searchParams.get('venueId') || ''
+  const venueIdParam = searchParams.get('venueId') || ''
   const presetCourtId = searchParams.get('courtId') || ''
 
+  const [selectedVenueId, setSelectedVenueId] = useState(venueIdParam)
   const [courtId, setCourtId] = useState('')
   const [startDatetime, setStartDatetime] = useState('')
   const [endDatetime, setEndDatetime] = useState('')
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [courts, setCourts] = useState<any[]>([])
+  type VenueLite = { id: string; name: string; city: string; country: string }
+  type CourtLite = { id: string; name: string; court_type: string; is_indoor: boolean }
+  const [venues, setVenues] = useState<VenueLite[]>([])
+  const [loadingVenues, setLoadingVenues] = useState(false)
+  const [courts, setCourts] = useState<CourtLite[]>([])
   const [loadingCourts, setLoadingCourts] = useState(false)
   const [date, setDate] = useState<string>('')
   const [slots, setSlots] = useState<Array<{ start: string; end: string; available: boolean; price: number }>>([])
   const [loadingSlots, setLoadingSlots] = useState(false)
+  const [createdBookingId, setCreatedBookingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Prefill date with today by default
+    const today = new Date()
+    const yyyy = today.getFullYear()
+    const mm = String(today.getMonth() + 1).padStart(2, '0')
+    const dd = String(today.getDate()).padStart(2, '0')
+    setDate(`${yyyy}-${mm}-${dd}`)
+  }, [])
+
+  useEffect(() => {
+    // Load venues if none preselected
+    const fetchVenues = async () => {
+      if (selectedVenueId) return
+      setLoadingVenues(true)
+      try {
+        const res = await fetch(`/api/venues`)
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'No se pudieron cargar las sedes')
+        setVenues(data.venues || [])
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Error cargando sedes')
+      } finally {
+        setLoadingVenues(false)
+      }
+    }
+    fetchVenues()
+  }, [selectedVenueId])
 
   useEffect(() => {
     const fetchCourts = async () => {
-      if (!venueId) return
+      if (!selectedVenueId) return
       setLoadingCourts(true)
       try {
-        const res = await fetch(`/api/venues/${venueId}/courts`)
+        const res = await fetch(`/api/venues/${selectedVenueId}/courts`)
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'No se pudieron cargar las canchas')
-        setCourts(data.courts || [])
+        const list = data.courts || []
+        setCourts(list)
+        if (!presetCourtId && list.length === 1) {
+          setCourtId(list[0].id)
+        }
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Error cargando canchas')
       } finally {
@@ -41,7 +79,7 @@ export default function NewBookingPage() {
       }
     }
     fetchCourts()
-  }, [venueId])
+  }, [selectedVenueId, presetCourtId])
 
   useEffect(() => {
     if (presetCourtId) setCourtId(presetCourtId)
@@ -97,12 +135,14 @@ export default function NewBookingPage() {
         setError(data.error || 'No se pudo crear la reserva')
         return
       }
-      if (!data.checkoutUrl) {
-        setError('No se obtuvo la URL de pago')
+      const bookingId = data.booking?.id
+      if (!bookingId) {
+        setError('Reserva creada pero falta el identificador de la reserva')
         return
       }
-      router.push(data.checkoutUrl)
-    } catch (err) {
+      // Ofrecer opciones de pago
+      setCreatedBookingId(bookingId)
+    } catch {
       setError('Ocurrió un error al crear la reserva')
     } finally {
       setLoading(false)
@@ -122,7 +162,7 @@ export default function NewBookingPage() {
               <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>
             )}
 
-            {venueId ? (
+            {selectedVenueId ? (
               <div className="space-y-2">
                 <Label htmlFor="courtSelect">Cancha</Label>
                 <select
@@ -145,15 +185,27 @@ export default function NewBookingPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                <Label htmlFor="courtId">ID de cancha (UUID)</Label>
-                <Input
-                  id="courtId"
-                  placeholder="00000000-0000-0000-0000-000000000000"
-                  value={courtId}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCourtId(e.target.value)}
+                <Label htmlFor="venueSelect">Sede</Label>
+                <select
+                  id="venueSelect"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={selectedVenueId}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                    setSelectedVenueId(e.target.value)
+                    setCourtId('')
+                  }}
+                  disabled={loadingVenues || loading}
                   required
-                  disabled={loading}
-                />
+                >
+                  <option value="" disabled>
+                    {loadingVenues ? 'Cargando sedes...' : 'Seleccioná una sede'}
+                  </option>
+                  {venues.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name} • {v.city}, {v.country}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
@@ -240,12 +292,26 @@ export default function NewBookingPage() {
 
             <div className="flex gap-3">
               <Button type="submit" disabled={loading} className="flex-1">
-                {loading ? 'Creando...' : 'Crear y pagar'}
+                {loading ? 'Creando...' : 'Crear reserva'}
               </Button>
               <Button type="button" variant="outline" onClick={() => router.push('/venues')}>
                 Ver sedes
               </Button>
             </div>
+
+            {createdBookingId && (
+              <div className="mt-4 space-y-2 border-t pt-4">
+                <div className="text-sm text-muted-foreground">Elegí un método de pago</div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button type="button" onClick={() => router.push(`/payments/start?bookingId=${createdBookingId}&method=mercadopago`)} className="flex-1">
+                    Pagar con Mercado Pago
+                  </Button>
+                  <Button type="button" variant="secondary" onClick={() => router.push(`/payments/checkout?bookingId=${createdBookingId}`)} className="flex-1">
+                    Pagar con Stripe
+                  </Button>
+                </div>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>

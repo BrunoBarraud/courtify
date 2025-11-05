@@ -27,6 +27,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { bookingId, subscriptionId, paymentMethod, currency = 'ARS' } = body
 
+    // Read Idempotency-Key from header or body
+    const idempotencyKey = request.headers.get('Idempotency-Key') || body.idempotencyKey
+
     if (!bookingId && !subscriptionId) {
       return NextResponse.json(
         { error: 'Either bookingId or subscriptionId is required' },
@@ -76,6 +79,32 @@ export async function POST(request: NextRequest) {
       amount = subscription.price
     }
 
+    // If idempotencyKey provided, check if a previous payment exists
+    if (idempotencyKey) {
+      const { data: existing } = await (createServerClient(() => cookies()))
+        .from('payments')
+        .select('external_payment_id, payment_status, amount, currency, booking_id, subscription_id, payment_number, metadata')
+        .eq('user_id', session.user.id)
+        .eq('metadata->>idempotencyKey', idempotencyKey)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      const existingPayment = existing?.[0]
+      if (existingPayment) {
+        return NextResponse.json({
+          success: true,
+          paymentId: existingPayment.external_payment_id,
+          externalPaymentId: existingPayment.external_payment_id,
+          status: existingPayment.payment_status,
+          amount: existingPayment.amount,
+          currency: existingPayment.currency,
+          bookingId: existingPayment.booking_id,
+          subscriptionId: existingPayment.subscription_id,
+          paymentNumber: existingPayment.payment_number,
+        })
+      }
+    }
+
     // Create payment
     const result = await paymentService.createPayment(paymentMethod, {
       amount,
@@ -83,6 +112,7 @@ export async function POST(request: NextRequest) {
       userId: session.user.id,
       bookingId,
       subscriptionId,
+      metadata: idempotencyKey ? { idempotencyKey } : undefined,
     })
 
     if (!result.success) {

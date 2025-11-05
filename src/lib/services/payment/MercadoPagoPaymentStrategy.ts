@@ -2,8 +2,7 @@
  * MercadoPago Payment Strategy
  * Concrete implementation of PaymentStrategy for MercadoPago
  */
-
-import mercadopago from 'mercadopago'
+import { MercadoPagoConfig, Preference, Payment as MPPayment } from 'mercadopago'
 import {
   PaymentStrategy,
   PaymentData,
@@ -12,49 +11,64 @@ import {
 } from './PaymentService'
 
 export class MercadoPagoPaymentStrategy implements PaymentStrategy {
-  constructor() {
+  constructor() {}
+
+  private getClient(): MercadoPagoConfig | null {
     const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN
-    if (!accessToken) {
-      throw new Error('MERCADOPAGO_ACCESS_TOKEN is not configured')
-    }
-    
-    mercadopago.configure({
-      access_token: accessToken,
-    })
+    if (!accessToken) return null
+    return new MercadoPagoConfig({ accessToken })
   }
 
   async createPayment(data: PaymentData): Promise<PaymentResult> {
     try {
-      const preference = await mercadopago.preferences.create({
-        items: [
-          {
-            title: 'Court Booking',
-            description: `Booking ID: ${data.bookingId}`,
-            quantity: 1,
-            currency_id: data.currency,
-            unit_price: data.amount,
+      const client = this.getClient()
+      if (!client) {
+        return {
+          success: false,
+          status: 'failed',
+          error: 'MercadoPago is not configured. Set MERCADOPAGO_ACCESS_TOKEN in .env.',
+        }
+      }
+
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      const isPublicAppUrl = /^https?:\/\//.test(appUrl) && !/localhost|127\.0\.0\.1/i.test(appUrl)
+      const preference = new Preference(client)
+      const prefRes: any = await preference.create({
+        body: {
+          items: [
+            {
+              id: String(data.bookingId || data.subscriptionId || 'court_booking'),
+              title: 'Court Booking',
+              description: `Booking ID: ${data.bookingId}`,
+              quantity: 1,
+              currency_id: data.currency,
+              unit_price: data.amount,
+            },
+          ],
+          metadata: {
+            user_id: data.userId,
+            booking_id: data.bookingId || '',
+            subscription_id: data.subscriptionId || '',
+            ...(data.metadata || {}),
           },
-        ],
-        metadata: {
-          user_id: data.userId,
-          booking_id: data.bookingId || '',
-          subscription_id: data.subscriptionId || '',
-          ...data.metadata,
+          back_urls: {
+            success: `${appUrl}/payments/success`,
+            failure: `${appUrl}/payments/failure`,
+            pending: `${appUrl}/payments/pending`,
+          },
+          ...(isPublicAppUrl ? { auto_return: 'approved' as const } : {}),
         },
-        back_urls: {
-          success: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success`,
-          failure: `${process.env.NEXT_PUBLIC_APP_URL}/payment/failure`,
-          pending: `${process.env.NEXT_PUBLIC_APP_URL}/payment/pending`,
-        },
-        auto_return: 'approved',
       })
+
+      const prefId = (prefRes?.id ?? prefRes?.body?.id) as string | undefined
+      const initPoint = (prefRes?.init_point ?? prefRes?.sandbox_init_point ?? prefRes?.body?.init_point) as string | undefined
 
       return {
         success: true,
-        paymentId: preference.body.id,
-        externalPaymentId: preference.body.id,
+        paymentId: prefId || '',
+        externalPaymentId: prefId || '',
         status: 'pending',
-        checkoutUrl: preference.body.init_point,
+        checkoutUrl: initPoint || '',
       }
     } catch (error) {
       console.error('MercadoPago payment creation failed:', error)
@@ -68,13 +82,16 @@ export class MercadoPagoPaymentStrategy implements PaymentStrategy {
 
   async confirmPayment(paymentId: string): Promise<PaymentResult> {
     try {
-      const payment = await mercadopago.payment.get(paymentId)
+      const client = this.getClient()
+      if (!client) return { success: false, status: 'failed', error: 'MercadoPago is not configured.' }
+      const paymentApi = new MPPayment(client)
+      const payment = await paymentApi.get({ id: paymentId })
 
       return {
-        success: payment.body.status === 'approved',
-        paymentId: payment.body.id.toString(),
-        externalPaymentId: payment.body.id.toString(),
-        status: this.mapMercadoPagoStatus(payment.body.status),
+        success: payment.status === 'approved',
+        paymentId: String(payment.id),
+        externalPaymentId: String(payment.id),
+        status: this.mapMercadoPagoStatus(payment.status ?? 'failed'),
       }
     } catch (error) {
       console.error('MercadoPago payment confirmation failed:', error)
@@ -88,14 +105,15 @@ export class MercadoPagoPaymentStrategy implements PaymentStrategy {
 
   async refundPayment(paymentId: string, amount?: number): Promise<PaymentResult> {
     try {
-      const refund = await mercadopago.refund.create({
-        payment_id: parseInt(paymentId),
-        amount: amount,
-      })
+      const client = this.getClient()
+      if (!client) return { success: false, status: 'failed', error: 'MercadoPago is not configured.' }
+      const mod: any = await import('mercadopago')
+      const refundApi = new mod.Refund(client as any)
+      const refund: any = await refundApi.create({ payment_id: Number(paymentId), amount })
 
       return {
-        success: refund.status === 200,
-        paymentId: refund.body.id.toString(),
+        success: true,
+        paymentId: String(refund.id ?? paymentId),
         externalPaymentId: paymentId,
         status: 'refunded',
       }
@@ -111,8 +129,11 @@ export class MercadoPagoPaymentStrategy implements PaymentStrategy {
 
   async getPaymentStatus(paymentId: string): Promise<PaymentStatus> {
     try {
-      const payment = await mercadopago.payment.get(paymentId)
-      return this.mapMercadoPagoStatus(payment.body.status)
+      const client = this.getClient()
+      if (!client) return 'failed'
+      const paymentApi = new MPPayment(client)
+      const payment = await paymentApi.get({ id: paymentId })
+      return this.mapMercadoPagoStatus(payment.status ?? 'failed')
     } catch (error) {
       console.error('Failed to get MercadoPago payment status:', error)
       return 'failed'

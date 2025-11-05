@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createServerClient } from '@/lib/supabase/client'
+import { createServerClient, createAdminClient } from '@/lib/supabase/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -82,8 +82,9 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
 
-    // Create venue
-    const { data: venue, error } = await supabase
+    // Create venue using admin client to bypass RLS
+    const admin = createAdminClient()
+    const { data: venue, error } = await admin
       .from('venues')
       .insert({
         ...body,
@@ -99,8 +100,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Add user as venue admin
-    await supabase.from('venue_admins').insert({
+    // Add user as venue admin (admin client to bypass RLS)
+    await admin.from('venue_admins').insert({
       venue_id: venue.id,
       user_id: session.user.id,
       permissions: {

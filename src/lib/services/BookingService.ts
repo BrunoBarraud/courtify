@@ -110,7 +110,7 @@ export class BookingService {
     }
 
     const duration = calculateDurationHours(data.startDatetime, data.endDatetime)
-    let totalAmount = court.hourly_rate * duration
+    const totalAmount = court.hourly_rate * duration
     let discountAmount = 0
 
     // Apply promotion if provided
@@ -288,7 +288,9 @@ export class BookingService {
       .select('id')
       .eq('court_id', courtId)
       .neq('status', 'cancelled')
-      .or(`start_datetime.lt.${endDatetime},end_datetime.gt.${startDatetime}`)
+      // Overlap if existing.start < new.end AND existing.end > new.start
+      .lt('start_datetime', endDatetime)
+      .gt('end_datetime', startDatetime)
 
     return (data?.length || 0) > 0
   }
@@ -299,8 +301,8 @@ export class BookingService {
   private async applyPromotion(
     code: string,
     amount: number,
-    userId: string,
-    courtType: string
+    _userId: string,
+    _courtType: string
   ): Promise<number> {
     const { data: promotion } = await this.supabase
       .from('promotions')
@@ -350,9 +352,9 @@ export class BookingService {
    * Generate time slots for a day
    */
   private generateTimeSlots(
-    rules: any[],
-    bookings: any[],
-    blockedPeriods: any[],
+    rules: Array<{ start_time: string; end_time: string; is_available?: boolean; price_override?: number }>,
+    bookings: Array<{ start_datetime: string; end_datetime: string }>,
+    blockedPeriods: Array<{ start_datetime: string; end_datetime: string }>,
     date: string,
     basePrice: number
   ) {

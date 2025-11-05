@@ -33,6 +33,20 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient()
 
+    // Deduplicate events (idempotency)
+    const { error: insertError } = await supabase
+      .from('payment_events')
+      .insert({ provider: 'stripe', event_id: event.id })
+
+    if (insertError) {
+      // 23505 = unique_violation
+      if ((insertError as any).code === '23505') {
+        return NextResponse.json({ received: true, duplicate: true }, { status: 409 })
+      }
+      console.error('Failed to record webhook event:', insertError)
+      return NextResponse.json({ error: 'Failed to record event' }, { status: 500 })
+    }
+
     // Handle different event types
     switch (event.type) {
       case 'payment_intent.succeeded': {

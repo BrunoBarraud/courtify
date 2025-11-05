@@ -26,19 +26,25 @@ export class StripePaymentStrategy implements PaymentStrategy {
 
   async createPayment(data: PaymentData): Promise<PaymentResult> {
     try {
-      const paymentIntent = await this.stripe.paymentIntents.create({
-        amount: Math.round(data.amount * 100), // Convert to cents
-        currency: data.currency.toLowerCase(),
-        metadata: {
-          userId: data.userId,
-          bookingId: data.bookingId || '',
-          subscriptionId: data.subscriptionId || '',
-          ...data.metadata,
+      const idempotencyKey = typeof (data.metadata as Record<string, unknown> | undefined)?.idempotencyKey === 'string'
+        ? (data.metadata as Record<string, unknown>).idempotencyKey as string
+        : undefined
+      const paymentIntent = await this.stripe.paymentIntents.create(
+        {
+          amount: Math.round(data.amount * 100), // Convert to cents
+          currency: data.currency.toLowerCase(),
+          metadata: {
+            userId: data.userId,
+            bookingId: data.bookingId || '',
+            subscriptionId: data.subscriptionId || '',
+            ...data.metadata,
+          },
+          automatic_payment_methods: {
+            enabled: true,
+          },
         },
-        automatic_payment_methods: {
-          enabled: true,
-        },
-      })
+        idempotencyKey ? { idempotencyKey: String(idempotencyKey) } : undefined
+      )
 
       return {
         success: true,

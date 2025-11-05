@@ -8,8 +8,6 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { HabilitarPushButton } from '@/components/HabilitarPushButton'
-import { TestPushButton } from '@/components/TestPushButton'
 import { Calendar, Clock, CreditCard, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrencyARS, formatDateTimeAR } from '@/lib/i18n/format'
@@ -57,29 +55,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Encabezado */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">Courtify</span>
-          </div>
-          <nav className="flex items-center gap-6">
-            <Link href="/dashboard" className="text-sm font-medium">
-              Panel
-            </Link>
-            <Link href="/bookings" className="text-sm font-medium">
-              Mis reservas
-            </Link>
-            <Link href="/venues" className="text-sm font-medium">
-              Ver sedes
-            </Link>
-            <Link href="/profile" className="text-sm font-medium">
-              Perfil
-            </Link>
-          </nav>
-        </div>
-      </header>
 
       <main className="flex-1 container py-8">
         {/* Bienvenida */}
@@ -90,10 +65,7 @@ export default async function DashboardPage() {
           <p className="text-muted-foreground">
             Esto es lo que está pasando con tus reservas
           </p>
-          <div className="mt-3 flex items-center gap-2">
-            <HabilitarPushButton />
-            <TestPushButton />
-          </div>
+          {/* Notificaciones temporariamente deshabilitadas */}
         </div>
 
         {/* Métricas */}
@@ -203,12 +175,9 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div className="py-8">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-2xl font-bold">Panel</h2>
-                    <p className="text-muted-foreground">Resumen de tu actividad y próximas reservas</p>
-                  </div>
-                  <HabilitarPushButton />
+                <div className="mb-4">
+                  <h2 className="text-2xl font-bold">Panel</h2>
+                  <p className="text-muted-foreground">Resumen de tu actividad y próximas reservas</p>
                 </div>
                 <Link href="/venues">
                   <Button>Reservar una cancha</Button>

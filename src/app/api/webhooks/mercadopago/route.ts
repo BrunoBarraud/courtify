@@ -38,11 +38,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, note: 'sin paymentId' })
     }
 
+    // Deduplicación de eventos por paymentId cuando lo tenemos
+    const supabase = createAdminClient()
+
+    if (paymentId) {
+      const { error: insertError } = await supabase
+        .from('payment_events')
+        .insert({ provider: 'mercadopago', event_id: paymentId })
+
+      if (insertError) {
+        if ((insertError as { code?: string }).code === '23505') {
+          return NextResponse.json({ received: true, duplicate: true }, { status: 409 })
+        }
+        console.error('Failed to record MP webhook event:', insertError)
+        return NextResponse.json({ error: 'Failed to record event' }, { status: 500 })
+      }
+    }
+
     // Obtener estado del pago en MP
     const payment = await mercadopago.payment.get(paymentId)
     const status = payment.body.status as string
-
-    const supabase = createAdminClient()
 
     // Actualizar tabla de payments por external_payment_id (en nuestra estrategia guardamos preference/payment id)
     const { data: updatedPayments } = await supabase

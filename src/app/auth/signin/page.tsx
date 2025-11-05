@@ -1,98 +1,162 @@
 /**
  * Sign In Page
+ * Implementa un formulario de inicio de sesión con validación mejorada
+ * y manejo de errores.
  */
 
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { createBrowserClient } from '@/lib/supabase/client'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+
+// Services
+import { authService } from '@/lib/services/auth.service'
+
+// UI Components
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Trophy } from 'lucide-react'
+import { Github, Mail, Trophy } from 'lucide-react'
+import SocialAuthButton from '@/components/auth/SocialAuthButtons'
+
+// Schema de validación
+const signInSchema = z.object({
+  email: z.string().email('Email inválido').min(1, 'El email es requerido'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres')
+})
+
+type SignInFormData = z.infer<typeof signInSchema>
 
 export default function SignInPage() {
   const router = useRouter()
-  const supabase = createBrowserClient()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const searchParams = useSearchParams()
+  const [isLoading, setIsLoading] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: '',
+      password: ''
+    }
+  })
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-
+  const onSubmit = async (data: SignInFormData) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      setIsLoading(true)
+      
+      const { data: authData, error } = await authService.signInWithEmail(
+        data.email,
+        data.password
+      )
 
       if (error) {
-        setError(error.message === 'Email not confirmed' ? 'Debés confirmar tu email antes de ingresar.' : error.message)
+        const errorMessage = error.message.includes('Invalid login credentials')
+          ? 'Credenciales inválidas. Verifica tu email y contraseña.'
+          : error.message.includes('Email not confirmed')
+          ? 'Por favor, verifica tu correo electrónico antes de iniciar sesión.'
+          : 'Ocurrió un error al iniciar sesión. Intenta nuevamente.'
+        
+        toast.error('Error de autenticación', {
+          description: errorMessage,
+        })
         return
       }
 
-      if (data.session) {
-        router.push('/dashboard')
+      if (authData?.session) {
+        // Mostrar mensaje de éxito
+        toast.success('¡Bienvenido de vuelta!')
+        
+        // Redirigir a la página anterior o al dashboard
+        const redirectTo = searchParams.get('redirectedFrom') || '/dashboard'
+        setIsRedirecting(true)
+        router.push(redirectTo)
         router.refresh()
       }
-    } catch (err) {
-      setError('Ocurrió un error inesperado')
+    } catch (error) {
+      console.error('Error durante el inicio de sesión:', error)
+      toast.error('Error', {
+        description: 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.'
+      })
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
+  // Efecto para manejar redirección después de autenticación exitosa
+  useEffect(() => {
+    if (isRedirecting) {
+      const timer = setTimeout(() => {
+        setIsRedirecting(false)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [isRedirecting])
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/50 p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <Trophy className="h-8 w-8 text-primary" />
-          <span className="text-2xl font-bold">Courtify</span>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <div className="mx-auto h-16 w-16 rounded-full bg-indigo-100 p-2 flex items-center justify-center">
+            <Trophy className="h-10 w-10 text-indigo-600" />
+          </div>
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
+            Bienvenido de vuelta
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            ¿No tenés una cuenta?{' '}
+            <Link
+              href="/auth/signup"
+              className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+            >
+              Registrate acá
+            </Link>
+          </p>
         </div>
 
-        {/* Tarjeta de ingreso */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Ingresar</CardTitle>
-            <CardDescription>
+        <Card className="shadow-lg overflow-hidden">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold">Iniciar sesión</CardTitle>
+            <CardDescription className="text-gray-600">
               Ingresá tus credenciales para acceder a tu cuenta
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleSignIn}>
-            <CardContent className="space-y-4">
-              {error && (
-                <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-                  {error}
-                </div>
-              )}
 
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="tucorreo@ejemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={loading}
+                  placeholder="tu@email.com"
+                  autoComplete="email"
+                  disabled={isLoading || isRedirecting}
+                  {...register('email')}
+                  className={errors.email ? 'border-red-500' : ''}
                 />
+                {errors.email && (
+                  <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Contraseña</Label>
                   <Link
-                    href="/auth/reset-password"
-                    className="text-sm text-primary hover:underline"
+                    href="/auth/forgot-password"
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
                   >
                     ¿Olvidaste tu contraseña?
                   </Link>
@@ -100,33 +164,75 @@ export default function SignInPage() {
                 <Input
                   id="password"
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={loading}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  disabled={isLoading || isRedirecting}
+                  {...register('password')}
+                  className={errors.password ? 'border-red-500' : ''}
                 />
+                {errors.password && (
+                  <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
+                )}
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Ingresando...' : 'Ingresar'}
+
+            <CardFooter className="flex flex-col space-y-4">
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || isRedirecting}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Iniciando sesión...
+                  </>
+                ) : isRedirecting ? (
+                  'Redirigiendo...'
+                ) : (
+                  'Iniciar sesión'
+                )}
               </Button>
-              <p className="text-sm text-center text-muted-foreground">
-                ¿No tenés cuenta?{' '}
-                <Link href="/auth/signup" className="text-primary hover:underline">
-                  Crear cuenta
-                </Link>
-              </p>
+
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-white px-2 text-gray-500">
+                    O continuá con
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 w-full">
+                <SocialAuthButton 
+                  provider="google"
+                  icon={<Mail className="h-4 w-4" />}
+                  text="Continuar con Google"
+                  loading={isLoading || isRedirecting}
+                />
+                <SocialAuthButton 
+                  provider="github"
+                  icon={<Github className="h-4 w-4" />}
+                  text="Continuar con GitHub"
+                  loading={isLoading || isRedirecting}
+                />
+              </div>
             </CardFooter>
           </form>
         </Card>
 
-        {/* Volver al inicio */}
-        <div className="mt-4 text-center">
-          <Link href="/" className="text-sm text-muted-foreground hover:text-primary">
-            ← Volver al inicio
-          </Link>
-        </div>
+        <p className="mt-8 text-center text-xs text-gray-500">
+          Al continuar, aceptás nuestros{' '}
+          <Link href="/terms" className="underline hover:text-gray-700">
+            Términos de servicio
+          </Link>{' '}
+          y{' '}
+          <Link href="/privacy" className="underline hover:text-gray-700">
+            Política de privacidad
+          </Link>.
+        </p>
       </div>
     </div>
   )
