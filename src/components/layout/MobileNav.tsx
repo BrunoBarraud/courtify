@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Calendar, CreditCard, User } from 'lucide-react'
+import { Home, Calendar, MapPin, User, CreditCard } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
@@ -44,7 +44,8 @@ export default function MobileNav() {
   const items = [
     { href: '/dashboard', label: 'Inicio', icon: Home },
     { href: '/bookings', label: 'Reservas', icon: Calendar },
-    { href: '/bookings', label: 'Pagos', icon: CreditCard }, // Pagos desde reservas por ahora
+    { href: '/venues', label: 'Canchas', icon: MapPin },
+    { href: '/payments', label: 'Pagos', icon: CreditCard },
     userId
       ? { href: '/perfil', label: 'Perfil', icon: User }
       : { href: '/auth/signin', label: 'Ingresar', icon: User },
