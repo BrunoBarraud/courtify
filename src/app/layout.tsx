@@ -3,8 +3,7 @@ import { Inter } from 'next/font/google'
 import { Toaster } from 'sonner'
 import './globals.css'
 import SupabaseProvider from '@/components/providers/SupabaseProvider'
-import MainNav from '@/components/layout/MainNav'
-import MobileNav from '@/components/layout/MobileNav'
+import SiteShell from '@/components/layout/SiteShell'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -27,13 +26,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <SupabaseProvider>
-          <div className="min-h-screen flex flex-col">
-            <MainNav />
-            <main className="flex-1 p-4 md:p-8 pb-20 md:pb-8">
-              {children}
-            </main>
-            <MobileNav />
-          </div>
+          <SiteShell>
+            {children}
+          </SiteShell>
           <Toaster position="top-right" richColors />
         </SupabaseProvider>
       </body>
