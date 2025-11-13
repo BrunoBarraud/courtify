@@ -45,19 +45,21 @@ export default function AdminUsersPage() {
       setLoading(false)
     }
 
-  const onDeleteUser = async (userId: string, email?: string) => {
-    const ok = window.confirm(`¿Eliminar al usuario ${email || userId}? Esta acción es permanente.`)
-    if (!ok) return
-    try {
-      const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || 'No se pudo eliminar el usuario')
-      toast.success('Usuario eliminado')
-      await load()
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error eliminando usuario')
+    const onDeleteUser = async (userId: string, email?: string) => {
+      const ok = window.confirm(
+        `¿Eliminar al usuario ${email || userId}? Esta acción es permanente.`
+      )
+      if (!ok) return
+      try {
+        const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data.error || 'No se pudo eliminar el usuario')
+        toast.success('Usuario eliminado')
+        await load()
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : 'Error eliminando usuario')
+      }
     }
-  }
   }
 
   useEffect(() => {
@@ -104,10 +106,14 @@ export default function AdminUsersPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Usuarios</h1>
-        <Button variant="outline" onClick={() => router.push('/admin')}>Volver</Button>
+        <Button variant="outline" onClick={() => router.push('/admin')}>
+          Volver
+        </Button>
       </div>
 
-      {error && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
+      {error && (
+        <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>
+      )}
 
       <Card>
         <CardHeader>
@@ -118,7 +124,11 @@ export default function AdminUsersPage() {
           <div className="grid md:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Buscar por email</Label>
-              <Input placeholder="email@dominio.com" value={filter} onChange={e => setFilter(e.target.value)} />
+              <Input
+                placeholder="email@dominio.com"
+                value={filter}
+                onChange={e => setFilter(e.target.value)}
+              />
             </div>
           </div>
 
@@ -133,7 +143,9 @@ export default function AdminUsersPage() {
                   <div className="flex items-center justify-between">
                     <div className="min-w-0">
                       <div className="font-semibold truncate">{u.email}</div>
-                      <div className="text-sm text-muted-foreground">Rol actual: {u.role || 'user'}</div>
+                      <div className="text-sm text-muted-foreground">
+                        Rol actual: {u.role || 'user'}
+                      </div>
                     </div>
                   </div>
 
@@ -160,22 +172,34 @@ export default function AdminUsersPage() {
                         onChange={e => e.target.value && onAddVenueAdmin(u.id, e.target.value)}
                         disabled={savingVenue?.startsWith(u.id)}
                       >
-                        <option value="" disabled>Elegí una sede</option>
+                        <option value="" disabled>
+                          Elegí una sede
+                        </option>
                         {venues.map((v: any) => (
-                          <option key={v.id} value={v.id}>{v.name}</option>
+                          <option key={v.id} value={v.id}>
+                            {v.name}
+                          </option>
                         ))}
                       </select>
                     </div>
 
                     <div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => alert('Para remover un admin de sede, usaré pronto una grilla de asignaciones (pendiente).')}>
-                        Ver asignaciones (pronto)
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            alert(
+                              'Para remover un admin de sede, usaré pronto una grilla de asignaciones (pendiente).'
+                            )
+                          }
+                        >
+                          Ver asignaciones (pronto)
                         </Button>
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => onDeleteUser(u.id, u.email)}
+                          //onClick={() => onDeleteUser(u.id, u.email)}
                           disabled={savingRole === u.id || savingVenue?.startsWith(u.id)}
                         >
                           Eliminar usuario

@@ -5,20 +5,24 @@ import { createServerClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCurrencyARS, formatDateTimeAR } from '@/lib/i18n/format'
-import CancelSection from './CancelSection'
+//import CancelSection from './CancelSection'
 
 export default async function BookingDetailPage({ params }: { params: { id: string } }) {
   const supabase = createServerClient(() => cookies())
 
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   if (!session) redirect('/auth/signin')
 
   const { data: booking } = await supabase
     .from('bookings')
-    .select(`
+    .select(
+      `
       *,
       court:courts(*, venue:venues(*))
-    `)
+    `
+    )
     .eq('id', params.id)
     .single()
 
@@ -30,9 +34,7 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
       <Card>
         <CardHeader>
           <CardTitle>Reserva #{booking.booking_number || booking.id}</CardTitle>
-          <CardDescription>
-            Estado: {booking.status}
-          </CardDescription>
+          <CardDescription>Estado: {booking.status}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid md:grid-cols-2 gap-4">
@@ -43,7 +45,10 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
             </div>
             <div>
               <h3 className="font-semibold mb-2">Fecha y horario</h3>
-              <p>{formatDateTimeAR(booking.start_datetime)} — {formatDateTimeAR(booking.end_datetime)}</p>
+              <p>
+                {formatDateTimeAR(booking.start_datetime)} —{' '}
+                {formatDateTimeAR(booking.end_datetime)}
+              </p>
             </div>
           </div>
 
@@ -59,13 +64,15 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
                   <Button disabled={isConfirmed}>Pagar Stripe</Button>
                 </Link>
                 <Link href={`/payments/start?bookingId=${booking.id}&method=mercadopago`}>
-                  <Button variant="secondary" disabled={isConfirmed}>Pagar MP</Button>
+                  <Button variant="secondary" disabled={isConfirmed}>
+                    Pagar MP
+                  </Button>
                 </Link>
               </div>
             </div>
           </div>
 
-          <CancelSection bookingId={booking.id} disabled={isConfirmed} />
+          {/*<CancelSection bookingId={booking.id} disabled={isConfirmed} />*/}
 
           <div>
             <Link href="/dashboard">

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import mercadopago from 'mercadopago'
+import { MercadoPagoConfig, Payment as MercadoPagoPayment } from 'mercadopago'
 import { createAdminClient } from '@/lib/supabase/client'
 
 export async function POST(request: NextRequest) {
@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
     if (!accessToken) {
       return NextResponse.json({ error: 'MERCADOPAGO_ACCESS_TOKEN no configurado' }, { status: 500 })
     }
-    mercadopago.configure({ access_token: accessToken })
+    const mercadoPagoClient = new MercadoPagoConfig({ accessToken })
+    const paymentApi = new MercadoPagoPayment(mercadoPagoClient)
 
     // MP puede enviar datos como JSON o sólo query params
     const url = new URL(request.url)
@@ -56,8 +57,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Obtener estado del pago en MP
-    const payment = await mercadopago.payment.get(paymentId)
-    const status = payment.body.status as string
+    const payment = await paymentApi.get({ id: paymentId })
+    const status = payment.status as string
 
     // Actualizar tabla de payments por external_payment_id (en nuestra estrategia guardamos preference/payment id)
     const { data: updatedPayments } = await supabase
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
           status === 'rejected' ? 'failed' :
           status === 'cancelled' ? 'failed' :
           status === 'in_process' ? 'processing' : 'pending',
-        external_payment_data: payment.body,
+        external_payment_data: payment,
       })
       .eq('external_payment_id', paymentId)
       .select()
