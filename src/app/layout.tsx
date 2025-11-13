@@ -4,6 +4,7 @@ import { Toaster } from 'sonner'
 import './globals.css'
 import SupabaseProvider from '@/components/providers/SupabaseProvider'
 import SiteShell from '@/components/layout/SiteShell'
+import NotificationsListener from '@/components/realtime/NotificationsListener'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -29,6 +30,7 @@ export default function RootLayout({
           <SiteShell>
             {children}
           </SiteShell>
+          <NotificationsListener />
           <Toaster position="top-right" richColors />
         </SupabaseProvider>
       </body>

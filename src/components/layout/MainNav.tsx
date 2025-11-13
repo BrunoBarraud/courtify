@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Home, Calendar, Users, BarChart, Trophy } from 'lucide-react'
-// Importación temporal con ruta relativa
 import dynamic from 'next/dynamic'
+const NotificationsBell = dynamic(() => import('@/components/realtime/NotificationsBell'), { ssr: false })
 
 // Importar dinámicamente para evitar problemas de importación
 const UserMenu = dynamic(
@@ -73,6 +73,7 @@ const MainNav = () => {
         </div>
         
         <div className="ml-auto flex items-center space-x-4">
+          <NotificationsBell />
           <UserMenu />
         </div>
       </div>

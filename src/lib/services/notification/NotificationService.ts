@@ -15,7 +15,7 @@ export interface NotificationObserver {
 // Notification data structure
 export interface NotificationData {
   userId: string
-  type: 'booking_confirmed' | 'booking_reminder' | 'booking_cancelled' | 'payment_received' | 'promotion' | 'tournament' | 'general'
+  type: 'booking_confirmed' | 'booking_reminder' | 'booking_cancelled' | 'payment_received' | 'promotion' | 'tournament' | 'general' | 'admin_booking_created' | 'admin_booking_cancelled' | 'admin_daily_summary'
   title: string
   body: string
   data?: Record<string, any>
@@ -224,6 +224,76 @@ export class NotificationService {
       body: data.message,
       data,
       channels: ['email', 'push'],
+    })
+  }
+
+  /**
+   * Notify venue admins when a new booking is created
+   */
+  async sendAdminBookingCreated(data: {
+    adminId: string
+    bookingNumber: string
+    courtName: string
+    venueName: string
+    startDatetime: string
+    endDatetime: string
+    userId: string
+  }): Promise<void> {
+    const startStr = new Date(data.startDatetime).toLocaleString('es-AR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })
+    const endStr = new Date(data.endDatetime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+
+    await this.notify({
+      userId: data.adminId,
+      type: 'admin_booking_created',
+      title: `Nueva reserva - ${data.bookingNumber}`,
+      body: `Se reservó ${data.courtName} en ${data.venueName} para el ${startStr} a ${endStr}.`,
+      data,
+      channels: ['email', 'push'],
+    })
+  }
+
+  /**
+   * Notify venue admins when a booking is cancelled
+   */
+  async sendAdminBookingCancelled(data: {
+    adminId: string
+    bookingNumber: string
+    courtName: string
+    venueName: string
+    startDatetime: string
+    endDatetime: string
+    userId: string
+    reason?: string
+  }): Promise<void> {
+    const startStr = new Date(data.startDatetime).toLocaleString('es-AR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })
+    const endStr = new Date(data.endDatetime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+
+    await this.notify({
+      userId: data.adminId,
+      type: 'admin_booking_cancelled',
+      title: `Reserva cancelada - ${data.bookingNumber}`,
+      body: `Se canceló la reserva de ${data.courtName} en ${data.venueName} (del ${startStr} a ${endStr}).${data.reason ? ` Motivo: ${data.reason}.` : ''}`,
+      data,
+      channels: ['email', 'push'],
+    })
+  }
+
+  /**
+   * Send a daily summary to venue admins
+   */
+  async sendAdminDailySummary(data: {
+    adminId: string
+    venueName: string
+    date: string
+    totalBookings: number
+  }): Promise<void> {
+    await this.notify({
+      userId: data.adminId,
+      type: 'admin_daily_summary',
+      title: `Resumen diario de reservas - ${data.venueName}`,
+      body: `Fecha ${new Date(data.date).toLocaleDateString('es-AR')}: ${data.totalBookings} reservas.`,
+      data,
+      channels: ['email']
     })
   }
 }

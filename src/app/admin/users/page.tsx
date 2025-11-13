@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { toast } from 'sonner'
 
 export default function AdminUsersPage() {
   const router = useRouter()
@@ -43,6 +44,20 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false)
     }
+
+  const onDeleteUser = async (userId: string, email?: string) => {
+    const ok = window.confirm(`¿Eliminar al usuario ${email || userId}? Esta acción es permanente.`)
+    if (!ok) return
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'No se pudo eliminar el usuario')
+      toast.success('Usuario eliminado')
+      await load()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error eliminando usuario')
+    }
+  }
   }
 
   useEffect(() => {
@@ -153,9 +168,19 @@ export default function AdminUsersPage() {
                     </div>
 
                     <div>
-                      <Button variant="outline" size="sm" onClick={() => alert('Para remover un admin de sede, usaré pronto una grilla de asignaciones (pendiente).')}>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => alert('Para remover un admin de sede, usaré pronto una grilla de asignaciones (pendiente).')}>
                         Ver asignaciones (pronto)
-                      </Button>
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => onDeleteUser(u.id, u.email)}
+                          disabled={savingRole === u.id || savingVenue?.startsWith(u.id)}
+                        >
+                          Eliminar usuario
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

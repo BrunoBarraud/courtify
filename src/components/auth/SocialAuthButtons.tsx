@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { authService } from '@/lib/services/auth.service'
 
@@ -21,8 +20,6 @@ const SocialAuthButton = ({
   text, 
   loading = false 
 }: SocialAuthButtonProps) => {
-  const router = useRouter()
-  
   const handleSignIn = async () => {
     try {
       // Mostrar indicador de carga
@@ -40,15 +37,10 @@ const SocialAuthButton = ({
         return
       }
       
-      // Mostrar mensaje de éxito
-      toast.success('Redirigiendo...', {
-        description: `Inicio de sesión con ${provider} exitoso.`
+      // No hacemos redirect manual. Supabase redirige a la URL de OAuth y luego vuelve a /auth/callback
+      toast.success('Redirigiendo a proveedor...', {
+        description: `Continuando con ${provider}...`
       })
-      
-      // Redirigir al dashboard después de un breve retraso
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 1000)
       
     } catch (error: unknown) {
       console.error(`Error signing in with ${provider}:`, error)
