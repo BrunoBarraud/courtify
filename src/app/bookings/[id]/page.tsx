@@ -5,7 +5,7 @@ import { createServerClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatCurrencyARS, formatDateTimeAR } from '@/lib/i18n/format'
-//import CancelSection from './CancelSection'
+import CancelSection from './CancelSection'
 
 export default async function BookingDetailPage({ params }: { params: { id: string } }) {
   const supabase = createServerClient(() => cookies())
@@ -72,7 +72,7 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
             </div>
           </div>
 
-          {/*<CancelSection bookingId={booking.id} disabled={isConfirmed} />*/}
+          <CancelSection bookingId={booking.id} disabled={isConfirmed} />
 
           <div>
             <Link href="/dashboard">

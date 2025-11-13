@@ -1,9 +1,5 @@
 import ContactForm from './ContactForm'
 
-export const metadata = {
-  title: 'Contacto | Courtify',
-}
-
 export default function ContactPage() {
   return (
     <div className="container py-12">
