@@ -182,12 +182,17 @@ export class BookingService {
             admins.map(a =>
               notificationService.sendAdminBookingCreated({
                 adminId: a.user_id,
+                bookingId: booking.id,
                 bookingNumber: booking.booking_number,
+                courtId: court.id,
                 courtName: court.name,
+                venueId: court.venue.id,
                 venueName: court.venue.name,
                 startDatetime: data.startDatetime,
                 endDatetime: data.endDatetime,
                 userId: data.userId,
+                status: booking.status,
+                finalAmount: booking.final_amount,
               })
             )
           )
@@ -260,12 +265,16 @@ export class BookingService {
             admins.map(a =>
               notificationService.sendAdminBookingCancelled({
                 adminId: a.user_id,
+                bookingId: booking.id,
                 bookingNumber: booking.booking_number,
+                courtId: booking.court.id,
                 courtName: booking.court.name,
+                venueId: booking.court.venue.id,
                 venueName: booking.court.venue.name,
                 startDatetime: booking.start_datetime,
                 endDatetime: booking.end_datetime,
                 userId,
+                finalAmount: booking.final_amount,
                 reason,
               })
             )

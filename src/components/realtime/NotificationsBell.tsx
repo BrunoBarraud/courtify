@@ -25,6 +25,24 @@ type NotificationRow = {
   data?: Record<string, unknown> | null
 }
 
+export const resolveNotificationLink = (n: NotificationRow) => {
+  const type = (n.notification_type || '').toLowerCase()
+  const data = n.data ?? undefined
+
+  if (type.startsWith('admin_')) {
+    const bookingId = typeof (data as Record<string, unknown>)?.bookingId === 'string' ? (data as Record<string, string>).bookingId : undefined
+    if (bookingId) {
+      return `/admin/bookings?highlight=${bookingId}`
+    }
+    return '/admin'
+  }
+
+  if (type.includes('booking')) return '/bookings'
+  if (type.includes('payment')) return '/payments'
+  if (type.includes('promotion')) return '/pricing'
+  return '/notifications'
+}
+
 export default function NotificationsBell() {
   const supabase = useSupabaseClient()
   const user = useUser()
@@ -100,21 +118,13 @@ export default function NotificationsBell() {
     })()
   }, [open, unread])
 
-  const resolveLink = (n: NotificationRow) => {
-    const t = (n.notification_type || '').toLowerCase()
-    if (t.includes('booking')) return '/bookings'
-    if (t.includes('payment')) return '/payments'
-    if (t.includes('promotion')) return '/pricing'
-    if (t.startsWith('admin_')) return '/admin'
-    return '/notifications'
-  }
-
   const onItemClick = async (n: NotificationRow) => {
     if (!n.id) return
     await fetch(`/api/notifications/${n.id}/read`, { method: 'POST' }).catch(() => {})
-    setItems(prev => prev.map(i => (i.id === n.id ? { ...i, read_at: i.read_at || new Date().toISOString() } : i)))
+    const now = new Date().toISOString()
+    setItems(prev => prev.map(i => (i.id === n.id ? { ...i, read_at: i.read_at || now } : i)))
     setUnread(x => Math.max(0, x - (n.read_at ? 0 : 1)))
-    router.push(resolveLink(n))
+    router.push(resolveNotificationLink(n))
   }
 
   return (
@@ -141,7 +151,8 @@ export default function NotificationsBell() {
                 if (res.ok) {
                   setUnread(0)
                   // Also reflect read state in current list
-                  setItems(prev => prev.map(i => ({ ...i, read_at: i.read_at || new Date().toISOString() as any } as any)))
+                  const now = new Date().toISOString()
+                  setItems(prev => prev.map(i => ({ ...i, read_at: i.read_at || now })))
                 }
               }}
             >

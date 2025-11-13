@@ -97,16 +97,20 @@ export default function UserMenu() {
 
   const handleSignOut = async () => {
     try {
+      setIsLoading(true)
       const { error } = await supabase.auth.signOut()
       
       if (error) throw error
       
+      setUser(null)
+      setRole(null)
       toast.success('Sesión cerrada correctamente')
       router.push('/auth/signin')
-      router.refresh()
     } catch (error) {
       console.error('Error al cerrar sesión:', error)
       toast.error('Ocurrió un error al cerrar sesión')
+    } finally {
+      setIsLoading(false)
     }
   }
 

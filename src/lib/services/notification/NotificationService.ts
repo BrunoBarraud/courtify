@@ -7,6 +7,18 @@ import { createAdminClient } from '@/lib/supabase/client'
 import { EmailNotificationObserver } from './EmailNotificationObserver'
 import { PushNotificationObserver } from './PushNotificationObserver'
 
+type NotificationChannel = 'email' | 'push' | 'sms'
+
+type NotificationPreferences = {
+  email_enabled?: boolean
+  push_enabled?: boolean
+  sms_enabled?: boolean
+  booking_reminders?: boolean
+  promotional_emails?: boolean
+  tournament_updates?: boolean
+  [key: string]: unknown
+}
+
 // Observer Pattern: Subject interface
 export interface NotificationObserver {
   update(notification: NotificationData): Promise<void>
@@ -18,26 +30,26 @@ export interface NotificationData {
   type: 'booking_confirmed' | 'booking_reminder' | 'booking_cancelled' | 'payment_received' | 'promotion' | 'tournament' | 'general' | 'admin_booking_created' | 'admin_booking_cancelled' | 'admin_daily_summary'
   title: string
   body: string
-  data?: Record<string, any>
-  channels?: ('email' | 'push' | 'sms')[]
+  data?: Record<string, unknown>
+  channels?: NotificationChannel[]
 }
 
 // Observer Pattern: Concrete Subject
 export class NotificationService {
-  private observers: Map<string, NotificationObserver> = new Map()
+  private observers: Map<NotificationChannel, NotificationObserver> = new Map()
   private supabase = createAdminClient()
 
   /**
    * Register an observer (notification channel)
    */
-  registerObserver(name: string, observer: NotificationObserver): void {
+  registerObserver(name: NotificationChannel, observer: NotificationObserver): void {
     this.observers.set(name, observer)
   }
 
   /**
    * Unregister an observer
    */
-  unregisterObserver(name: string): void {
+  unregisterObserver(name: NotificationChannel): void {
     this.observers.delete(name)
   }
 
@@ -49,14 +61,13 @@ export class NotificationService {
     const preferences = await this.getUserPreferences(notification.userId)
     
     // Determine which channels to use
-    const channels = notification.channels || ['email', 'push']
+    const channels: NotificationChannel[] = notification.channels || ['email', 'push']
     
     // Send notification through each enabled channel
     const promises: Promise<void>[] = []
-    
-    for (const [name, observer] of this.observers) {
-      const channelName = name as 'email' | 'push' | 'sms'
-      
+
+    for (const [channelName, observer] of this.observers) {
+
       // Check if channel is enabled in preferences
       if (channels.includes(channelName) && this.isChannelEnabled(preferences, channelName)) {
         promises.push(observer.update(notification))
@@ -72,7 +83,7 @@ export class NotificationService {
   /**
    * Get user notification preferences
    */
-  private async getUserPreferences(userId: string) {
+  private async getUserPreferences(userId: string): Promise<NotificationPreferences> {
     const { data, error } = await this.supabase
       .from('notification_preferences')
       .select('*')
@@ -97,7 +108,7 @@ export class NotificationService {
   /**
    * Check if a channel is enabled for the user
    */
-  private isChannelEnabled(preferences: any, channel: 'email' | 'push' | 'sms'): boolean {
+  private isChannelEnabled(preferences: NotificationPreferences, channel: NotificationChannel): boolean {
     const channelKey = `${channel}_enabled`
     return preferences[channelKey] !== false
   }
@@ -106,8 +117,8 @@ export class NotificationService {
    * Store notification in database
    */
   private async storeNotification(notification: NotificationData): Promise<void> {
-    const channels = notification.channels || ['email', 'push']
-    
+    const channels: NotificationChannel[] = notification.channels || ['email', 'push']
+
     // Store one record per channel
     const records = channels.map(channel => ({
       user_id: notification.userId,
@@ -232,12 +243,17 @@ export class NotificationService {
    */
   async sendAdminBookingCreated(data: {
     adminId: string
+    bookingId: string
     bookingNumber: string
+    courtId: string
     courtName: string
+    venueId: string
     venueName: string
     startDatetime: string
     endDatetime: string
     userId: string
+    status: string
+    finalAmount: number
   }): Promise<void> {
     const startStr = new Date(data.startDatetime).toLocaleString('es-AR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })
     const endStr = new Date(data.endDatetime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
@@ -247,7 +263,19 @@ export class NotificationService {
       type: 'admin_booking_created',
       title: `Nueva reserva - ${data.bookingNumber}`,
       body: `Se reservó ${data.courtName} en ${data.venueName} para el ${startStr} a ${endStr}.`,
-      data,
+      data: {
+        bookingId: data.bookingId,
+        bookingNumber: data.bookingNumber,
+        courtId: data.courtId,
+        courtName: data.courtName,
+        venueId: data.venueId,
+        venueName: data.venueName,
+        startDatetime: data.startDatetime,
+        endDatetime: data.endDatetime,
+        status: data.status,
+        finalAmount: data.finalAmount,
+        userId: data.userId,
+      },
       channels: ['email', 'push'],
     })
   }
@@ -257,12 +285,16 @@ export class NotificationService {
    */
   async sendAdminBookingCancelled(data: {
     adminId: string
+    bookingId: string
     bookingNumber: string
+    courtId: string
     courtName: string
+    venueId: string
     venueName: string
     startDatetime: string
     endDatetime: string
     userId: string
+    finalAmount: number
     reason?: string
   }): Promise<void> {
     const startStr = new Date(data.startDatetime).toLocaleString('es-AR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -273,7 +305,20 @@ export class NotificationService {
       type: 'admin_booking_cancelled',
       title: `Reserva cancelada - ${data.bookingNumber}`,
       body: `Se canceló la reserva de ${data.courtName} en ${data.venueName} (del ${startStr} a ${endStr}).${data.reason ? ` Motivo: ${data.reason}.` : ''}`,
-      data,
+      data: {
+        bookingId: data.bookingId,
+        bookingNumber: data.bookingNumber,
+        courtId: data.courtId,
+        courtName: data.courtName,
+        venueId: data.venueId,
+        venueName: data.venueName,
+        startDatetime: data.startDatetime,
+        endDatetime: data.endDatetime,
+        status: 'cancelled',
+        userId: data.userId,
+        finalAmount: data.finalAmount,
+        reason: data.reason,
+      },
       channels: ['email', 'push'],
     })
   }
