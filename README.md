@@ -267,21 +267,7 @@ git push origin feature/your-feature
 
 Este proyecto es software propietario. Todos los derechos reservados.
 
-## 🆘 Soporte
 
-Para soporte, escribí a support@courtify.com o abrí un issue en el repositorio.
-
-## 🗺️ Roadmap
-
-- [ ] App móvil (React Native)
-- [ ] Dashboard de analíticas avanzadas
-- [ ] Soporte multi-idioma
-- [ ] Notificaciones por SMS
-- [ ] Integraciones de calendario (Google Calendar, Outlook)
-- [ ] Gestión de alquiler de equipos
-- [ ] Reserva de clases/entrenamientos
-- [ ] Sistema de puntos/fidelidad
-- [ ] Funciones sociales (match entre jugadores)
 
 ## 👥 Equipo
 
