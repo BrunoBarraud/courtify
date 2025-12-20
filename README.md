@@ -267,13 +267,3 @@ git push origin feature/your-feature
 
 Este proyecto es software propietario. Todos los derechos reservados.
 
-
-
-## 👥 Equipo
-
-Hecho con ❤️ por el equipo de Courtify.
-
----
-
-**Versión**: 1.0.0  
-**Última actualización**: Enero 2025
