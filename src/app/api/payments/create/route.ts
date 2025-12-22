@@ -9,6 +9,7 @@ import { createServerClient } from '@/lib/supabase/client'
 import { paymentService } from '@/lib/services/payment/PaymentService'
 import { StripePaymentStrategy } from '@/lib/services/payment/StripePaymentStrategy'
 import { MercadoPagoPaymentStrategy } from '@/lib/services/payment/MercadoPagoPaymentStrategy'
+import { notificationService } from '@/lib/services/notification/NotificationService'
 
 // Register payment strategies
 paymentService.registerStrategy('stripe', new StripePaymentStrategy())
@@ -17,9 +18,11 @@ paymentService.registerStrategy('mercadopago', new MercadoPagoPaymentStrategy())
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerClient(() => cookies())
-    
+
     // Check authentication
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -38,15 +41,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (!['stripe', 'mercadopago'].includes(paymentMethod)) {
-      return NextResponse.json(
-        { error: 'Invalid payment method' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid payment method' }, { status: 400 })
     }
 
     // Get amount from booking or subscription
     let amount = 0
-    
+
     if (bookingId) {
       const { data: booking } = await supabase
         .from('bookings')
@@ -55,10 +55,7 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (!booking) {
-        return NextResponse.json(
-          { error: 'Booking not found' },
-          { status: 404 }
-        )
+        return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
       }
 
       amount = booking.final_amount
@@ -70,10 +67,7 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (!subscription) {
-        return NextResponse.json(
-          { error: 'Subscription plan not found' },
-          { status: 404 }
-        )
+        return NextResponse.json({ error: 'Subscription plan not found' }, { status: 404 })
       }
 
       amount = subscription.price
@@ -81,9 +75,11 @@ export async function POST(request: NextRequest) {
 
     // If idempotencyKey provided, check if a previous payment exists
     if (idempotencyKey) {
-      const { data: existing } = await (createServerClient(() => cookies()))
+      const { data: existing } = await createServerClient(() => cookies())
         .from('payments')
-        .select('external_payment_id, payment_status, amount, currency, booking_id, subscription_id, payment_number, metadata')
+        .select(
+          'external_payment_id, payment_status, amount, currency, booking_id, subscription_id, payment_number, metadata'
+        )
         .eq('user_id', session.user.id)
         .eq('metadata->>idempotencyKey', idempotencyKey)
         .order('created_at', { ascending: false })
@@ -116,6 +112,14 @@ export async function POST(request: NextRequest) {
     })
 
     if (!result.success) {
+      // Notificación de error de pago para el jugador
+      await notificationService.sendPaymentError({
+        userId: session.user.id,
+        amount,
+        currency,
+        bookingNumber: undefined,
+      })
+
       return NextResponse.json(
         { error: result.error || 'Payment creation failed' },
         { status: 400 }
@@ -125,17 +129,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result)
   } catch (error) {
     console.error('Payment creation error:', error)
-    
+
     if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    return NextResponse.json(
-      { error: 'Failed to create payment' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to create payment' }, { status: 500 })
   }
 }

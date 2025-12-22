@@ -30,7 +30,10 @@ export const resolveNotificationLink = (n: NotificationRow) => {
   const data = n.data ?? undefined
 
   if (type.startsWith('admin_')) {
-    const bookingId = typeof (data as Record<string, unknown>)?.bookingId === 'string' ? (data as Record<string, string>).bookingId : undefined
+    const bookingId =
+      typeof (data as Record<string, unknown>)?.bookingId === 'string'
+        ? (data as Record<string, string>).bookingId
+        : undefined
     if (bookingId) {
       return `/admin/bookings?highlight=${bookingId}`
     }
@@ -73,11 +76,12 @@ export default function NotificationsBell() {
           .from('notifications')
           .select('id, title, body, sent_at, read_at, notification_type, data')
           .eq('user_id', user.id)
+          .eq('channel', 'push')
           .order('sent_at', { ascending: false })
           .limit(10)
         if (!cancelled && data) {
           setItems(data as NotificationRow[])
-          setUnread((data as { read_at?: string | null }[]).filter((n) => !n.read_at).length)
+          setUnread((data as { read_at?: string | null }[]).filter(n => !n.read_at).length)
         }
       }
     })()
@@ -86,13 +90,28 @@ export default function NotificationsBell() {
       .channel('notifications_bell')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        (payload) => {
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        payload => {
           const row = payload.new as NotificationRow
-          setItems(prev => [
-            { id: row.id, title: row.title, body: row.body, sent_at: row.sent_at, read_at: row.read_at, notification_type: row.notification_type, data: row.data },
-            ...prev,
-          ].slice(0, 10))
+          setItems(prev =>
+            [
+              {
+                id: row.id,
+                title: row.title,
+                body: row.body,
+                sent_at: row.sent_at,
+                read_at: row.read_at,
+                notification_type: row.notification_type,
+                data: row.data,
+              },
+              ...prev,
+            ].slice(0, 10)
+          )
           setUnread(x => x + 1)
         }
       )
@@ -132,7 +151,7 @@ export default function NotificationsBell() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
-          {(unread > 0) && (
+          {unread > 0 && (
             <span className="absolute -top-1 -right-1 h-4 min-w-[16px] rounded-full bg-destructive px-1 text-[10px] font-bold text-white flex items-center justify-center">
               {unread}
             </span>
@@ -143,7 +162,9 @@ export default function NotificationsBell() {
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>Notificaciones</span>
           <div className="flex items-center gap-2">
-            <Link href="/notifications" className="text-xs underline">Ver todas</Link>
+            <Link href="/notifications" className="text-xs underline">
+              Ver todas
+            </Link>
             <button
               className="text-xs text-muted-foreground hover:text-foreground"
               onClick={async () => {
@@ -164,11 +185,17 @@ export default function NotificationsBell() {
         {items.length === 0 ? (
           <div className="p-3 text-sm text-muted-foreground">Sin notificaciones</div>
         ) : (
-          items.map((n) => (
-            <DropdownMenuItem key={n.id || Math.random()} className="flex flex-col items-start gap-1 focus:bg-muted cursor-pointer" onClick={() => onItemClick(n)}>
+          items.map(n => (
+            <DropdownMenuItem
+              key={n.id || Math.random()}
+              className="flex flex-col items-start gap-1 focus:bg-muted cursor-pointer"
+              onClick={() => onItemClick(n)}
+            >
               <div className="text-sm font-medium line-clamp-1">{n.title || 'Notificación'}</div>
               <div className="text-xs text-muted-foreground line-clamp-2">{n.body}</div>
-              <div className="text-[10px] text-muted-foreground mt-1">{n.sent_at ? new Date(n.sent_at).toLocaleString('es-AR') : ''}</div>
+              <div className="text-[10px] text-muted-foreground mt-1">
+                {n.sent_at ? new Date(n.sent_at).toLocaleString('es-AR') : ''}
+              </div>
             </DropdownMenuItem>
           ))
         )}
