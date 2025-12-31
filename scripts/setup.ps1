@@ -1,7 +1,7 @@
-# Courtify Setup Script for Windows (PowerShell)
-# This script helps you set up Courtify for the first time
+# MatchUp Setup Script for Windows (PowerShell)
+# This script helps you set up MatchUp for the first time
 
-Write-Host "🏟️  Courtify Setup Script" -ForegroundColor Green
+Write-Host "🏟️  MatchUp Setup Script" -ForegroundColor Green
 Write-Host "=========================" -ForegroundColor Green
 Write-Host ""
 

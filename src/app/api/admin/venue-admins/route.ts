@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@/lib/supabase/client'
+import { DEFAULT_VENUE_ADMIN_PERMISSIONS } from '@/lib/auth/roles'
 
 async function requireSuperAdmin() {
   const supabase = createServerClient(() => cookies())
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   if (!session) return { supabase, session: null, isSuper: false }
   const { data: profile } = await supabase
     .from('profiles')
@@ -20,11 +23,31 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json()
   const { userId, venueId } = body || {}
-  if (!userId || !venueId) return NextResponse.json({ error: 'Missing userId/venueId' }, { status: 400 })
+  if (!userId || !venueId)
+    return NextResponse.json({ error: 'Missing userId/venueId' }, { status: 400 })
 
-  const { error } = await supabase
+  // Hacer la operación idempotente: si ya existe la asignación, no intentar insertar de nuevo
+  const { data: existing, error: existingError } = await supabase
     .from('venue_admins')
-    .insert({ user_id: userId, venue_id: venueId })
+    .select('user_id')
+    .eq('user_id', userId)
+    .eq('venue_id', venueId)
+    .maybeSingle()
+
+  if (existingError && existingError.code !== 'PGRST116') {
+    // PGRST116 = no rows found for maybeSingle; otros errores sí son relevantes
+    return NextResponse.json({ error: existingError.message }, { status: 400 })
+  }
+
+  if (existing) {
+    return NextResponse.json({ ok: true })
+  }
+
+  const { error } = await supabase.from('venue_admins').insert({
+    user_id: userId,
+    venue_id: venueId,
+    permissions: DEFAULT_VENUE_ADMIN_PERMISSIONS,
+  })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   return NextResponse.json({ ok: true })
@@ -37,9 +60,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const userId = searchParams.get('userId')
 
-  let query = supabase
-    .from('venue_admins')
-    .select('user_id, venue:venues(id, name, slug)')
+  let query = supabase.from('venue_admins').select('user_id, venue:venues(id, name, slug)')
 
   if (userId) {
     query = query.eq('user_id', userId)
@@ -56,7 +77,8 @@ export async function DELETE(request: NextRequest) {
 
   const body = await request.json()
   const { userId, venueId } = body || {}
-  if (!userId || !venueId) return NextResponse.json({ error: 'Missing userId/venueId' }, { status: 400 })
+  if (!userId || !venueId)
+    return NextResponse.json({ error: 'Missing userId/venueId' }, { status: 400 })
 
   const { error } = await supabase
     .from('venue_admins')

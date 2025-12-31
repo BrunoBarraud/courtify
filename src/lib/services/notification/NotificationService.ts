@@ -27,7 +27,23 @@ export interface NotificationObserver {
 // Notification data structure
 export interface NotificationData {
   userId: string
-  type: 'booking_confirmed' | 'booking_reminder' | 'booking_cancelled' | 'payment_received' | 'promotion' | 'tournament' | 'general' | 'admin_booking_created' | 'admin_booking_cancelled' | 'admin_daily_summary'
+  type:
+    | 'booking_confirmed'
+    | 'booking_reminder'
+    | 'booking_cancelled'
+    | 'booking_cancelled_by_club'
+    | 'waitlist_slot_available'
+    | 'payment_received'
+    | 'payment_failed'
+    | 'subscription_update'
+    | 'promotion'
+    | 'tournament'
+    | 'general'
+    | 'account_welcome'
+    | 'account_password_reset'
+    | 'admin_booking_created'
+    | 'admin_booking_cancelled'
+    | 'admin_daily_summary'
   title: string
   body: string
   data?: Record<string, unknown>
@@ -59,15 +75,14 @@ export class NotificationService {
   async notify(notification: NotificationData): Promise<void> {
     // Get user notification preferences
     const preferences = await this.getUserPreferences(notification.userId)
-    
+
     // Determine which channels to use
     const channels: NotificationChannel[] = notification.channels || ['email', 'push']
-    
+
     // Send notification through each enabled channel
     const promises: Promise<void>[] = []
 
     for (const [channelName, observer] of this.observers) {
-
       // Check if channel is enabled in preferences
       if (channels.includes(channelName) && this.isChannelEnabled(preferences, channelName)) {
         promises.push(observer.update(notification))
@@ -108,7 +123,10 @@ export class NotificationService {
   /**
    * Check if a channel is enabled for the user
    */
-  private isChannelEnabled(preferences: NotificationPreferences, channel: NotificationChannel): boolean {
+  private isChannelEnabled(
+    preferences: NotificationPreferences,
+    channel: NotificationChannel
+  ): boolean {
     const channelKey = `${channel}_enabled`
     return preferences[channelKey] !== false
   }
@@ -130,9 +148,7 @@ export class NotificationService {
       sent_at: new Date().toISOString(),
     }))
 
-    const { error } = await this.supabase
-      .from('notifications')
-      .insert(records)
+    const { error } = await this.supabase.from('notifications').insert(records)
 
     if (error) {
       console.error('Failed to store notification:', error)
@@ -151,11 +167,53 @@ export class NotificationService {
     endDatetime: string
     totalAmount: number
   }): Promise<void> {
+    const start = new Date(data.startDatetime)
+    const formattedDate = start.toLocaleDateString('es-AR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })
+    const formattedTime = start.toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+
     await this.notify({
       userId: data.userId,
       type: 'booking_confirmed',
-      title: `Reserva confirmada - ${data.bookingNumber}`,
-      body: `Tu reserva en ${data.courtName} (${data.venueName}) fue confirmada para el ${new Date(data.startDatetime).toLocaleDateString('es-AR')}.`,
+      title: 'Reserva confirmada',
+      body: `¡Golazo! Tu turno para el ${formattedDate} a las ${formattedTime} hs en ${data.venueName} está confirmado.`,
+      data,
+      channels: ['email', 'push'],
+    })
+  }
+
+  /**
+   * Account welcome notification
+   */
+  async sendAccountWelcome(data: { userId: string; fullName?: string }): Promise<void> {
+    const name = data.fullName || 'Jugador'
+
+    await this.notify({
+      userId: data.userId,
+      type: 'account_welcome',
+      title: 'Bienvenido a la app',
+      body: `Bienvenido a MatchUp, ${name}. Ya podés empezar a reservar tus turnos.`,
+      data,
+      channels: ['email', 'push'],
+    })
+  }
+
+  /**
+   * Password reset notification (solo para registro en la bandeja in-app)
+   * El email de recuperación lo envía directamente Supabase.
+   */
+  async sendPasswordResetNotification(data: { userId: string }): Promise<void> {
+    await this.notify({
+      userId: data.userId,
+      type: 'account_password_reset',
+      title: 'Recuperación de contraseña',
+      body: 'Te enviamos un enlace para restablecer tu contraseña.',
       data,
       channels: ['email', 'push'],
     })
@@ -168,13 +226,22 @@ export class NotificationService {
     userId: string
     bookingNumber: string
     courtName: string
+    venueName?: string
     startDatetime: string
   }): Promise<void> {
+    const start = new Date(data.startDatetime)
+    const formattedTime = start.toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+
     await this.notify({
       userId: data.userId,
       type: 'booking_reminder',
       title: 'Recordatorio de reserva',
-      body: `Recordatorio: tenés una reserva en ${data.courtName} a las ${new Date(data.startDatetime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}.`,
+      body: `Che, no te olvides. Mañana jugás a las ${formattedTime} hs${
+        data.venueName ? ` en ${data.venueName}` : ''
+      }.`,
       data,
       channels: ['email', 'push'],
     })
@@ -193,10 +260,30 @@ export class NotificationService {
     await this.notify({
       userId: data.userId,
       type: 'payment_received',
-      title: `Pago recibido - ${data.paymentNumber}`,
-      body: `Recibimos tu pago de ${data.amount} ${data.currency}.`,
+      title: 'Pago confirmado',
+      body: `Recibimos tu pago de $${data.amount}. ¡Gracias!`,
       data,
       channels: ['email'],
+    })
+  }
+
+  /**
+   * Send payment error notification
+   */
+  async sendPaymentError(data: {
+    userId: string
+    paymentNumber?: string
+    amount?: number
+    currency?: string
+    bookingNumber?: string
+  }): Promise<void> {
+    await this.notify({
+      userId: data.userId,
+      type: 'payment_failed',
+      title: 'Error en el pago',
+      body: 'Uh, algo salió mal. Tu pago fue rechazado, por favor intentá de nuevo.',
+      data,
+      channels: ['email', 'push'],
     })
   }
 
@@ -207,13 +294,54 @@ export class NotificationService {
     userId: string
     bookingNumber: string
     courtName: string
+    venueName?: string
+    startDatetime?: string
     refundAmount?: number
   }): Promise<void> {
+    const start = data.startDatetime ? new Date(data.startDatetime) : null
+    const formattedDate = start
+      ? start.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
+      : undefined
+
     await this.notify({
       userId: data.userId,
       type: 'booking_cancelled',
-      title: `Reserva cancelada - ${data.bookingNumber}`,
-      body: `Tu reserva en ${data.courtName} fue cancelada.${data.refundAmount ? ` Se procesará un reembolso de ${data.refundAmount}.` : ''}`,
+      title: 'Reserva cancelada',
+      body: formattedDate
+        ? `Tu turno del ${formattedDate} fue cancelado.`
+        : `Tu turno fue cancelado.`,
+      data,
+      channels: ['email', 'push'],
+    })
+  }
+
+  /**
+   * Send booking cancelled by club notification
+   */
+  async sendClubCancellationNotification(data: {
+    userId: string
+    bookingNumber: string
+    courtName: string
+    venueName: string
+    startDatetime: string
+    reason?: string
+  }): Promise<void> {
+    const start = new Date(data.startDatetime)
+    const formattedDate = start.toLocaleDateString('es-AR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })
+
+    await this.notify({
+      userId: data.userId,
+      type: 'booking_cancelled_by_club',
+      title: 'Turno cancelado por el club',
+      body: `Malas noticias: ${
+        data.venueName
+      } tuvo que cancelar tu turno del ${formattedDate} (por ejemplo, por lluvia). ${
+        data.reason || 'Contactate con el club para reprogramar.'
+      }`,
       data,
       channels: ['email', 'push'],
     })
@@ -239,6 +367,37 @@ export class NotificationService {
   }
 
   /**
+   * Subscription / abono updates
+   */
+  async sendSubscriptionUpdate(data: {
+    userId: string
+    action: 'purchased' | 'expiring' | 'low_credits'
+    planName: string
+    remainingCredits?: number
+  }): Promise<void> {
+    let body = ''
+
+    if (data.action === 'purchased') {
+      body = `Compraste el abono de ${data.planName}.`
+    } else if (data.action === 'expiring') {
+      body = `Atenti: tu abono ${data.planName} está por vencer.`
+    } else if (data.action === 'low_credits') {
+      body = `Atenti: te queda${data.remainingCredits === 1 ? '' : 'n'} ${
+        data.remainingCredits || 0
+      } turno${data.remainingCredits === 1 ? '' : 's'} en tu abono.`
+    }
+
+    await this.notify({
+      userId: data.userId,
+      type: 'subscription_update',
+      title: 'Actualización de abono',
+      body,
+      data,
+      channels: ['email', 'push'],
+    })
+  }
+
+  /**
    * Notify venue admins when a new booking is created
    */
   async sendAdminBookingCreated(data: {
@@ -255,8 +414,17 @@ export class NotificationService {
     status: string
     finalAmount: number
   }): Promise<void> {
-    const startStr = new Date(data.startDatetime).toLocaleString('es-AR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })
-    const endStr = new Date(data.endDatetime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+    const startStr = new Date(data.startDatetime).toLocaleString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+    const endStr = new Date(data.endDatetime).toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
 
     await this.notify({
       userId: data.adminId,
@@ -297,14 +465,25 @@ export class NotificationService {
     finalAmount: number
     reason?: string
   }): Promise<void> {
-    const startStr = new Date(data.startDatetime).toLocaleString('es-AR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })
-    const endStr = new Date(data.endDatetime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+    const startStr = new Date(data.startDatetime).toLocaleString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+    const endStr = new Date(data.endDatetime).toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
 
     await this.notify({
       userId: data.adminId,
       type: 'admin_booking_cancelled',
       title: `Reserva cancelada - ${data.bookingNumber}`,
-      body: `Se canceló la reserva de ${data.courtName} en ${data.venueName} (del ${startStr} a ${endStr}).${data.reason ? ` Motivo: ${data.reason}.` : ''}`,
+      body: `Se canceló la reserva de ${data.courtName} en ${
+        data.venueName
+      } (del ${startStr} a ${endStr}).${data.reason ? ` Motivo: ${data.reason}.` : ''}`,
       data: {
         bookingId: data.bookingId,
         bookingNumber: data.bookingNumber,
@@ -336,9 +515,44 @@ export class NotificationService {
       userId: data.adminId,
       type: 'admin_daily_summary',
       title: `Resumen diario de reservas - ${data.venueName}`,
-      body: `Fecha ${new Date(data.date).toLocaleDateString('es-AR')}: ${data.totalBookings} reservas.`,
+      body: `Fecha ${new Date(data.date).toLocaleDateString('es-AR')}: ${
+        data.totalBookings
+      } reservas.`,
       data,
-      channels: ['email']
+      channels: ['email'],
+    })
+  }
+
+  /**
+   * Waitlist: slot available notification ("¡Turno liberado!")
+   */
+  async sendWaitlistSlotAvailable(data: {
+    userId: string
+    courtName: string
+    venueName: string
+    startDatetime: string
+    expiresInMinutes?: number
+  }): Promise<void> {
+    const start = new Date(data.startDatetime)
+    const formattedDate = start.toLocaleDateString('es-AR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })
+    const formattedTime = start.toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+
+    const minutes = data.expiresInMinutes ?? 10
+
+    await this.notify({
+      userId: data.userId,
+      type: 'waitlist_slot_available',
+      title: '¡Turno liberado!',
+      body: `¡Se liberó un lugar el ${formattedDate} a las ${formattedTime} hs en ${data.venueName}! Tenés ${minutes} minutos para confirmarlo.`,
+      data,
+      channels: ['push'],
     })
   }
 }

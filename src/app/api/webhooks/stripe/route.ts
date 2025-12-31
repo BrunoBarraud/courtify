@@ -25,10 +25,7 @@ export async function POST(request: NextRequest) {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
     } catch (err) {
       console.error('Webhook signature verification failed:', err)
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
     const supabase = createAdminClient()
@@ -71,10 +68,12 @@ export async function POST(request: NextRequest) {
             // Get booking details for notification
             const { data: booking } = await supabase
               .from('bookings')
-              .select(`
+              .select(
+                `
                 *,
                 court:courts(*, venue:venues(*))
-              `)
+              `
+              )
               .eq('id', payment.booking_id)
               .single()
 
@@ -92,10 +91,26 @@ export async function POST(request: NextRequest) {
 
           // Update subscription status if applicable
           if (payment.subscription_id) {
-            await supabase
+            const { data: userSub } = await supabase
               .from('user_subscriptions')
               .update({ status: 'active' })
               .eq('id', payment.subscription_id)
+              .select('id, user_id, plan_id')
+              .single()
+
+            if (userSub?.plan_id) {
+              const { data: plan } = await supabase
+                .from('subscription_plans')
+                .select('name')
+                .eq('id', userSub.plan_id)
+                .single()
+
+              await notificationService.sendSubscriptionUpdate({
+                userId: userSub.user_id,
+                action: 'purchased',
+                planName: plan?.name || 'abono',
+              })
+            }
           }
         }
 
@@ -106,13 +121,23 @@ export async function POST(request: NextRequest) {
         const paymentIntent = event.data.object as Stripe.PaymentIntent
 
         // Update payment status
-        await supabase
+        const { data: payment } = await supabase
           .from('payments')
-          .update({ 
+          .update({
             payment_status: 'failed',
-            external_payment_data: { error: paymentIntent.last_payment_error }
+            external_payment_data: { error: paymentIntent.last_payment_error },
           })
           .eq('external_payment_id', paymentIntent.id)
+          .select('user_id, amount, currency, booking_id')
+          .single()
+
+        if (payment) {
+          await notificationService.sendPaymentError({
+            userId: payment.user_id,
+            amount: payment.amount,
+            currency: payment.currency,
+          })
+        }
 
         break
       }
@@ -123,7 +148,7 @@ export async function POST(request: NextRequest) {
         // Update payment status
         await supabase
           .from('payments')
-          .update({ 
+          .update({
             payment_status: 'refunded',
             refund_amount: charge.amount_refunded / 100,
             refunded_at: new Date().toISOString(),
@@ -140,9 +165,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error('Webhook error:', error)
-    return NextResponse.json(
-      { error: 'Webhook handler failed' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
   }
 }

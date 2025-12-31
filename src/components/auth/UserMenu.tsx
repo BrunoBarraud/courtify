@@ -43,7 +43,9 @@ export default function UserMenu() {
 
     const init = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
         console.debug('[UserMenu] init getUser ->', user?.id, user?.email)
         if (mounted) setUser(user)
         if (mounted && user?.id) {
@@ -65,9 +67,11 @@ export default function UserMenu() {
       }
     }
 
-    const { data: subscription } = supabase.auth.onAuthStateChange(async (evt) => {
+    const { data: subscription } = supabase.auth.onAuthStateChange(async evt => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
         console.debug('[UserMenu] onAuthStateChange', evt, '->', user?.id, user?.email)
         if (mounted) setUser(user)
         if (mounted && user?.id) {
@@ -99,9 +103,9 @@ export default function UserMenu() {
     try {
       setIsLoading(true)
       const { error } = await supabase.auth.signOut()
-      
+
       if (error) throw error
-      
+
       setUser(null)
       setRole(null)
       toast.success('Sesión cerrada correctamente')
@@ -115,18 +119,12 @@ export default function UserMenu() {
   }
 
   if (isLoading) {
-    return (
-      <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
-    )
+    return <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
   }
 
   if (!user || !user.email) {
     return (
-      <Button 
-        variant="outline" 
-        onClick={() => router.push('/auth/signin')}
-        className="ml-4"
-      >
+      <Button variant="outline" onClick={() => router.push('/auth/signin')} className="ml-4">
         Iniciar sesión
       </Button>
     )
@@ -137,7 +135,7 @@ export default function UserMenu() {
     if (name) {
       return name
         .split(' ')
-        .map((n) => n[0])
+        .map(n => n[0])
         .join('')
         .toUpperCase()
         .substring(0, 2)
@@ -153,10 +151,7 @@ export default function UserMenu() {
         onClick={() => router.push('/perfil')}
       >
         <Avatar className="h-8 w-8">
-          <AvatarImage
-            src={user.user_metadata?.avatar_url || ''}
-            alt={user.email}
-          />
+          <AvatarImage src={user.user_metadata?.avatar_url || ''} alt={user.email} />
           <AvatarFallback className="bg-indigo-100 text-indigo-700">
             {getInitials(
               user.user_metadata?.full_name || user.user_metadata?.name || '',
@@ -197,7 +192,7 @@ export default function UserMenu() {
               <Settings className="mr-2 h-4 w-4" />
               <span>Configuración</span>
             </DropdownMenuItem>
-            {role === 'super_admin' && (
+            {(role === 'super_admin' || role === 'venue_admin') && (
               <DropdownMenuItem onClick={() => router.push('/admin/users')}>
                 <Shield className="mr-2 h-4 w-4" />
                 <span>Admin</span>

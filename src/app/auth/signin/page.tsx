@@ -22,14 +22,21 @@ import { authService } from '@/lib/services/auth.service'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Github, Mail, Trophy } from 'lucide-react'
-import SocialAuthButton from '@/components/auth/SocialAuthButtons'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Trophy } from 'lucide-react'
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
 
 // Schema de validación
 const signInSchema = z.object({
   email: z.string().email('Email inválido').min(1, 'El email es requerido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres')
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
 })
 
 type SignInFormData = z.infer<typeof signInSchema>
@@ -39,7 +46,7 @@ export default function SignInPage() {
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
-  
+
   const {
     register,
     handleSubmit,
@@ -48,18 +55,15 @@ export default function SignInPage() {
     resolver: zodResolver(signInSchema),
     defaultValues: {
       email: '',
-      password: ''
-    }
+      password: '',
+    },
   })
 
   const onSubmit = async (data: SignInFormData) => {
     try {
       setIsLoading(true)
-      
-      const { data: authData, error } = await authService.signInWithEmail(
-        data.email,
-        data.password
-      )
+
+      const { data: authData, error } = await authService.signInWithEmail(data.email, data.password)
 
       if (error) {
         const errorMessage = error.message.includes('Invalid login credentials')
@@ -67,7 +71,7 @@ export default function SignInPage() {
           : error.message.includes('Email not confirmed')
           ? 'Por favor, verifica tu correo electrónico antes de iniciar sesión.'
           : 'Ocurrió un error al iniciar sesión. Intenta nuevamente.'
-        
+
         toast.error('Error de autenticación', {
           description: errorMessage,
         })
@@ -77,7 +81,7 @@ export default function SignInPage() {
       if (authData?.session) {
         // Mostrar mensaje de éxito
         toast.success('¡Bienvenido de vuelta!')
-        
+
         // Redirigir a la página anterior o al dashboard
         const redirectTo = searchParams.get('redirectedFrom') || '/dashboard'
         setIsRedirecting(true)
@@ -87,7 +91,7 @@ export default function SignInPage() {
     } catch (error) {
       console.error('Error durante el inicio de sesión:', error)
       toast.error('Error', {
-        description: 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.'
+        description: 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.',
       })
     } finally {
       setIsLoading(false)
@@ -177,11 +181,7 @@ export default function SignInPage() {
             </CardContent>
 
             <CardFooter className="flex flex-col space-y-4">
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading || isRedirecting}
-              >
+              <Button type="submit" className="w-full" disabled={isLoading || isRedirecting}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -199,26 +199,11 @@ export default function SignInPage() {
                   <div className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-2 text-gray-500">
-                    O continuá con
-                  </span>
+                  <span className="bg-white px-2 text-gray-500">O continuá con</span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 w-full">
-                <SocialAuthButton 
-                  provider="google"
-                  icon={<Mail className="h-4 w-4" />}
-                  text="Continuar con Google"
-                  loading={isLoading || isRedirecting}
-                />
-                <SocialAuthButton 
-                  provider="github"
-                  icon={<Github className="h-4 w-4" />}
-                  text="Continuar con GitHub"
-                  loading={isLoading || isRedirecting}
-                />
-              </div>
+              <GoogleSignInButton disabled={isLoading || isRedirecting} />
             </CardFooter>
           </form>
         </Card>
@@ -231,7 +216,8 @@ export default function SignInPage() {
           y{' '}
           <Link href="/privacy" className="underline hover:text-gray-700">
             Política de privacidad
-          </Link>.
+          </Link>
+          .
         </p>
       </div>
     </div>

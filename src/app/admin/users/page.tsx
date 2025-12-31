@@ -188,13 +188,9 @@ export default function AdminUsersPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() =>
-                            alert(
-                              'Para remover un admin de sede, usaré pronto una grilla de asignaciones (pendiente).'
-                            )
-                          }
+                          onClick={() => router.push(`/admin/users/${u.id}/permissions`)}
                         >
-                          Ver asignaciones (pronto)
+                          Gestionar permisos
                         </Button>
                         <Button
                           variant="destructive"

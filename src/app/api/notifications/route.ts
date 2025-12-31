@@ -5,7 +5,9 @@ import { createServerClient } from '@/lib/supabase/client'
 // GET /api/notifications?limit=20&offset=0
 export async function GET(req: NextRequest) {
   const supabase = createServerClient(() => cookies())
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
@@ -14,8 +16,11 @@ export async function GET(req: NextRequest) {
 
   const { data, error, count } = await supabase
     .from('notifications')
-    .select('id, title, body, notification_type, channel, data, sent_at, read_at', { count: 'exact' })
+    .select('id, title, body, notification_type, channel, data, sent_at, read_at', {
+      count: 'exact',
+    })
     .eq('user_id', user.id)
+    .eq('channel', 'push')
     .order('sent_at', { ascending: false })
     .range(offset, offset + limit - 1)
 

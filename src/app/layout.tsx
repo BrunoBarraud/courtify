@@ -12,8 +12,9 @@ import type { Database } from '@/types/database'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Courtify - Sports Court Booking Platform',
-  description: 'Book sports courts online with ease. Manage bookings, subscriptions, and tournaments.',
+  title: 'MatchUp - Sports Court Booking Platform',
+  description:
+    'Book sports courts online with ease. Manage bookings, subscriptions, and tournaments.',
 }
 
 export const viewport: Viewport = {
@@ -21,11 +22,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const supabase = createServerComponentClient<Database>({ cookies })
   const {
     data: { session },
@@ -35,9 +32,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <SupabaseProvider initialSession={session}>
-          <SiteShell>
-            {children}
-          </SiteShell>
+          <SiteShell>{children}</SiteShell>
           <NotificationsListener />
           <Toaster position="top-right" richColors />
         </SupabaseProvider>

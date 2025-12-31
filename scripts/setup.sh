@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Courtify Setup Script
-# This script helps you set up Courtify for the first time
+# MatchUp Setup Script
+# This script helps you set up MatchUp for the first time
 
-echo "🏟️  Courtify Setup Script"
+echo "🏟️  MatchUp Setup Script"
 echo "========================="
 echo ""
 

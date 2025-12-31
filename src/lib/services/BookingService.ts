@@ -13,7 +13,10 @@ export class BookingService {
   /**
    * Check court availability for a specific date
    */
-  async checkAvailability(courtId: string, date: string): Promise<{
+  async checkAvailability(
+    courtId: string,
+    date: string
+  ): Promise<{
     available: boolean
     slots: Array<{ start: string; end: string; available: boolean; price: number }>
   }> {
@@ -249,6 +252,8 @@ export class BookingService {
       userId,
       bookingNumber: booking.booking_number,
       courtName: booking.court.name,
+      venueName: booking.court.venue.name,
+      startDatetime: booking.start_datetime,
     })
 
     // Notify venue admins about cancellation (non-blocking)
@@ -323,11 +328,13 @@ export class BookingService {
   async getUserBookings(userId: string, status?: string) {
     let query = this.supabase
       .from('bookings')
-      .select(`
+      .select(
+        `
         *,
         court:courts(*, venue:venues(*)),
         payment:payments(*)
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('start_datetime', { ascending: false })
 
@@ -421,7 +428,12 @@ export class BookingService {
    * Generate time slots for a day
    */
   private generateTimeSlots(
-    rules: Array<{ start_time: string; end_time: string; is_available?: boolean; price_override?: number }>,
+    rules: Array<{
+      start_time: string
+      end_time: string
+      is_available?: boolean
+      price_override?: number
+    }>,
     bookings: Array<{ start_datetime: string; end_datetime: string }>,
     blockedPeriods: Array<{ start_datetime: string; end_datetime: string }>,
     date: string,
@@ -430,8 +442,12 @@ export class BookingService {
     const slots: Array<{ start: string; end: string; available: boolean; price: number }> = []
 
     const pushSlot = (start: Date, end: Date, price: number) => {
-      const isBooked = bookings.some(b => new Date(b.start_datetime) < end && new Date(b.end_datetime) > start)
-      const isBlocked = blockedPeriods.some(bp => new Date(bp.start_datetime) < end && new Date(bp.end_datetime) > start)
+      const isBooked = bookings.some(
+        b => new Date(b.start_datetime) < end && new Date(b.end_datetime) > start
+      )
+      const isBlocked = blockedPeriods.some(
+        bp => new Date(bp.start_datetime) < end && new Date(bp.end_datetime) > start
+      )
       slots.push({
         start: start.toISOString(),
         end: end.toISOString(),
@@ -441,15 +457,22 @@ export class BookingService {
     }
 
     const now = new Date()
-    const sameDate = (d: Date) => d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
+    const sameDate = (d: Date) =>
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate()
 
     if (rules && rules.length > 0) {
       // Build slots based on rules windows (hourly steps)
       for (const r of rules) {
         if (r.is_available === false) continue
         // Parse times "HH:MM"
-        const [sHour, sMin] = String(r.start_time).split(':').map((x: string) => parseInt(x, 10))
-        const [eHour, eMin] = String(r.end_time).split(':').map((x: string) => parseInt(x, 10))
+        const [sHour, sMin] = String(r.start_time)
+          .split(':')
+          .map((x: string) => parseInt(x, 10))
+        const [eHour, eMin] = String(r.end_time)
+          .split(':')
+          .map((x: string) => parseInt(x, 10))
         const startWin = new Date(date)
         startWin.setHours(sHour || 0, sMin || 0, 0, 0)
         const endWin = new Date(date)
@@ -487,24 +510,34 @@ export class BookingService {
   /**
    * Notify waitlist users when a slot becomes available
    */
-  private async notifyWaitlist(courtId: string, startDatetime: string, endDatetime: string) {
+  private async notifyWaitlist(courtId: string, startDatetime: string, _endDatetime: string) {
     const { data: waitlistUsers } = await this.supabase
       .from('waitlist')
       .select('*, user:profiles(*)')
       .eq('court_id', courtId)
       .eq('status', 'active')
 
+    const { data: court } = await this.supabase
+      .from('courts')
+      .select('name, venue:venues(name)')
+      .eq('id', courtId)
+      .single<{ name: string; venue: { name: string }[] }>()
+
     // Notify relevant users
     for (const entry of waitlistUsers || []) {
       // Simple notification - in production, check time overlap
-      await notificationService.notify({
-        userId: entry.user_id,
-        type: 'general',
-        title: 'Court Available',
-        body: 'A court you were waiting for is now available!',
-        data: { courtId, startDatetime, endDatetime },
-        channels: ['push'],
-      })
+      if (court) {
+        const courtName = court.name
+        const venueName = court.venue[0]?.name ?? ''
+
+        await notificationService.sendWaitlistSlotAvailable({
+          userId: entry.user_id,
+          courtName,
+          venueName,
+          startDatetime,
+          expiresInMinutes: 10,
+        })
+      }
     }
   }
 }
