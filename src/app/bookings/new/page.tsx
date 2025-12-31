@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { CheckCircle2 } from 'lucide-react'
 
 export default function NewBookingPage() {
   const router = useRouter()
@@ -20,14 +21,13 @@ export default function NewBookingPage() {
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  type VenueLite = { id: string; name: string; city: string; country: string }
   type CourtLite = { id: string; name: string; court_type: string; is_indoor: boolean }
-  const [venues, setVenues] = useState<VenueLite[]>([])
-  const [loadingVenues, setLoadingVenues] = useState(false)
   const [courts, setCourts] = useState<CourtLite[]>([])
   const [loadingCourts, setLoadingCourts] = useState(false)
   const [date, setDate] = useState<string>('')
-  const [slots, setSlots] = useState<Array<{ start: string; end: string; available: boolean; price: number }>>([])
+  const [slots, setSlots] = useState<
+    Array<{ start: string; end: string; available: boolean; price: number }>
+  >([])
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null)
 
@@ -41,23 +41,23 @@ export default function NewBookingPage() {
   }, [])
 
   useEffect(() => {
-    // Load venues if none preselected
-    const fetchVenues = async () => {
+    // Auto-load default venue if none preselected
+    const fetchDefaultVenue = async () => {
       if (selectedVenueId) return
-      setLoadingVenues(true)
       try {
         const res = await fetch(`/api/venues`)
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'No se pudieron cargar las sedes')
-        setVenues(data.venues || [])
+        const venues = data.venues || []
+        if (venues.length > 0) {
+          setSelectedVenueId(venues[0].id)
+        }
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Error cargando sedes')
-      } finally {
-        setLoadingVenues(false)
+        setError(e instanceof Error ? e.message : 'Error cargando sede')
       }
     }
-    fetchVenues()
-  }, [selectedVenueId])
+    fetchDefaultVenue()
+  }, [])
 
   useEffect(() => {
     const fetchCourts = async () => {
@@ -84,16 +84,6 @@ export default function NewBookingPage() {
   useEffect(() => {
     if (presetCourtId) setCourtId(presetCourtId)
   }, [presetCourtId])
-
-  const onChangeStart = (val: string) => {
-    setStartDatetime(val)
-    if (!val) return
-    const start = new Date(val)
-    if (isNaN(start.getTime())) return
-    const end = new Date(start.getTime() + 60 * 60 * 1000)
-    const iso = new Date(end.getTime() - end.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
-    setEndDatetime(iso)
-  }
 
   // Load availability slots when court and date are selected
   useEffect(() => {
@@ -151,120 +141,95 @@ export default function NewBookingPage() {
 
   return (
     <div className="container max-w-2xl py-10">
-      <Card>
+      <Card className="border-2">
         <CardHeader>
-          <CardTitle>Nueva reserva</CardTitle>
-          <CardDescription>Completá los datos para generar tu reserva y continuar al pago.</CardDescription>
+          <CardTitle className="text-2xl">Nueva reserva</CardTitle>
+          <CardDescription>
+            Completá los datos para generar tu reserva y continuar al pago.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>
-            )}
-
-            {selectedVenueId ? (
-              <div className="space-y-2">
-                <Label htmlFor="courtSelect">Cancha</Label>
-                <select
-                  id="courtSelect"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={courtId}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCourtId(e.target.value)}
-                  disabled={loadingCourts || loading}
-                  required
-                >
-                  <option value="" disabled>
-                    {loadingCourts ? 'Cargando canchas...' : 'Seleccioná una cancha'}
-                  </option>
-                  {courts.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} • {c.court_type} {c.is_indoor ? '• Techada' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="venueSelect">Sede</Label>
-                <select
-                  id="venueSelect"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={selectedVenueId}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                    setSelectedVenueId(e.target.value)
-                    setCourtId('')
-                  }}
-                  disabled={loadingVenues || loading}
-                  required
-                >
-                  <option value="" disabled>
-                    {loadingVenues ? 'Cargando sedes...' : 'Seleccioná una sede'}
-                  </option>
-                  {venues.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name} • {v.city}, {v.country}
-                    </option>
-                  ))}
-                </select>
+              <div className="p-4 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20">
+                {error}
               </div>
             )}
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="start">Inicio</Label>
-                <Input
-                  id="start"
-                  type="datetime-local"
-                  value={startDatetime}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChangeStart(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="end">Fin</Label>
-                <Input
-                  id="end"
-                  type="datetime-local"
-                  value={endDatetime}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndDatetime(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="courtSelect" className="text-base font-semibold">
+                Cancha
+              </Label>
+              <select
+                id="courtSelect"
+                className="w-full rounded-md border-2 border-input bg-background px-3 py-2.5 text-sm focus:border-primary transition-colors"
+                value={courtId}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCourtId(e.target.value)}
+                disabled={loadingCourts || loading}
+                required
+              >
+                <option value="" disabled>
+                  {loadingCourts ? 'Cargando canchas...' : 'Seleccioná una cancha'}
+                </option>
+                {courts.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} • {c.court_type} {c.is_indoor ? '• Techada' : ''}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Availability by date */}
             <div className="space-y-2">
-              <Label htmlFor="date">Fecha</Label>
+              <Label htmlFor="date" className="text-base font-semibold">
+                Fecha
+              </Label>
               <Input
                 id="date"
                 type="date"
                 value={date}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDate(e.target.value)}
                 disabled={loading}
+                className="border-2"
               />
-              {date && courtId && (
-                <div className="mt-3">
-                  <div className="mb-2 text-sm text-muted-foreground">
-                    {loadingSlots ? 'Cargando horarios...' : 'Horarios disponibles'}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {slots.filter(s => s.available).length === 0 && !loadingSlots ? (
-                      <span className="text-sm text-muted-foreground">No hay horarios disponibles.</span>
-                    ) : (
-                      slots.filter(s => s.available).map((s) => {
+            </div>
+
+            {date && courtId && (
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">
+                  {loadingSlots ? 'Cargando horarios...' : 'Horarios disponibles'}
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {slots.filter(s => s.available).length === 0 && !loadingSlots ? (
+                    <div className="w-full p-4 text-center text-sm text-muted-foreground bg-muted/50 rounded-md">
+                      No hay horarios disponibles para esta fecha.
+                    </div>
+                  ) : (
+                    slots
+                      .filter(s => s.available)
+                      .map(s => {
                         const startLocal = new Date(s.start)
                         const endLocal = new Date(s.end)
-                        const label = `${startLocal.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${endLocal.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                        const label = `${startLocal.toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })} - ${endLocal.toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}`
+                        const isSelected =
+                          startDatetime &&
+                          new Date(startDatetime).getTime() === startLocal.getTime()
                         return (
                           <Button
                             key={s.start}
                             type="button"
-                            variant="outline"
+                            variant={isSelected ? 'default' : 'outline'}
+                            className="border-2"
                             onClick={() => {
-                              // Set start/end fields from slot (convert to local input value format)
-                              const toInput = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+                              const toInput = (d: Date) =>
+                                new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+                                  .toISOString()
+                                  .slice(0, 16)
                               setStartDatetime(toInput(startLocal))
                               setEndDatetime(toInput(endLocal))
                             }}
@@ -273,40 +238,75 @@ export default function NewBookingPage() {
                           </Button>
                         )
                       })
-                    )}
-                  </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notas (opcional)</Label>
+              <Label htmlFor="notes" className="text-base font-semibold">
+                Notas (opcional)
+              </Label>
               <Input
                 id="notes"
                 placeholder="Ej: Traer pelotas"
                 value={notes}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNotes(e.target.value)}
                 disabled={loading}
+                className="border-2"
               />
             </div>
 
-            <div className="flex gap-3">
-              <Button type="submit" disabled={loading} className="flex-1">
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="submit"
+                disabled={loading || !startDatetime}
+                className="flex-1"
+                size="lg"
+              >
                 {loading ? 'Creando...' : 'Crear reserva'}
               </Button>
-              <Button type="button" variant="outline" onClick={() => router.push('/venues')}>
-                Ver sedes
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push('/venues')}
+                size="lg"
+              >
+                Cancelar
               </Button>
             </div>
 
             {createdBookingId && (
-              <div className="mt-4 space-y-2 border-t pt-4">
-                <div className="text-sm text-muted-foreground">Elegí un método de pago</div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button type="button" onClick={() => router.push(`/payments/start?bookingId=${createdBookingId}&method=mercadopago`)} className="flex-1">
+              <div className="mt-6 space-y-4 border-t-2 pt-6">
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500/10 mb-3">
+                    <CheckCircle2 className="h-6 w-6 text-green-500" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-1">¡Reserva creada!</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Elegí un método de pago para confirmar
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      router.push(
+                        `/payments/start?bookingId=${createdBookingId}&method=mercadopago`
+                      )
+                    }
+                    className="flex-1"
+                    size="lg"
+                  >
                     Pagar con Mercado Pago
                   </Button>
-                  <Button type="button" variant="secondary" onClick={() => router.push(`/payments/checkout?bookingId=${createdBookingId}`)} className="flex-1">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => router.push(`/payments/checkout?bookingId=${createdBookingId}`)}
+                    className="flex-1"
+                    size="lg"
+                  >
                     Pagar con Stripe
                   </Button>
                 </div>
