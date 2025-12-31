@@ -41,23 +41,13 @@ export async function requireSuperAdmin() {
   }
 }
 
-export async function checkVenueAccess(venueId: string) {
+export async function checkVenueAccess(_venueId: string) {
   const auth = await requireAuth()
   if (!auth.session) return { ...auth, isAllowed: false }
 
-  // Super admin siempre tiene acceso
-  if (auth.isSuperAdmin) return { ...auth, isAllowed: true }
-
-  // Verificar si es admin de la sede
-  const { data: venueAdmin } = await auth.supabase
-    .from('venue_admins')
-    .select('*')
-    .eq('venue_id', venueId)
-    .eq('user_id', auth.session.user.id)
-    .single()
-
+  // En una sola sede, cualquier admin (super_admin o venue_admin) tiene acceso
   return {
     ...auth,
-    isAllowed: !!venueAdmin,
+    isAllowed: auth.isAdmin || false,
   }
 }
