@@ -171,40 +171,8 @@ export class BookingService {
       totalAmount: finalAmount,
     })
 
-    // Notify venue admins (non-blocking)
-    ;(async () => {
-      try {
-        // Get admins for the venue
-        const { data: admins } = await this.supabase
-          .from('venue_admins')
-          .select('user_id')
-          .eq('venue_id', court.venue.id)
-
-        if (admins && admins.length > 0) {
-          await Promise.allSettled(
-            admins.map(a =>
-              notificationService.sendAdminBookingCreated({
-                adminId: a.user_id,
-                bookingId: booking.id,
-                bookingNumber: booking.booking_number,
-                courtId: court.id,
-                courtName: court.name,
-                venueId: court.venue.id,
-                venueName: court.venue.name,
-                startDatetime: data.startDatetime,
-                endDatetime: data.endDatetime,
-                userId: data.userId,
-                status: booking.status,
-                finalAmount: booking.final_amount,
-              })
-            )
-          )
-        }
-      } catch (e) {
-        // Best-effort: log and continue
-        console.error('Failed to notify venue admins:', e)
-      }
-    })()
+    // TODO: En una sola sede, las notificaciones a admins se pueden manejar de forma diferente
+    // Por ahora, se omiten las notificaciones automáticas a venue_admins
 
     return booking
   }
@@ -256,39 +224,8 @@ export class BookingService {
       startDatetime: booking.start_datetime,
     })
 
-    // Notify venue admins about cancellation (non-blocking)
-    ;(async () => {
-      try {
-        const venueId = booking.court.venue.id
-        const { data: admins } = await this.supabase
-          .from('venue_admins')
-          .select('user_id')
-          .eq('venue_id', venueId)
-
-        if (admins && admins.length > 0) {
-          await Promise.allSettled(
-            admins.map(a =>
-              notificationService.sendAdminBookingCancelled({
-                adminId: a.user_id,
-                bookingId: booking.id,
-                bookingNumber: booking.booking_number,
-                courtId: booking.court.id,
-                courtName: booking.court.name,
-                venueId: booking.court.venue.id,
-                venueName: booking.court.venue.name,
-                startDatetime: booking.start_datetime,
-                endDatetime: booking.end_datetime,
-                userId,
-                finalAmount: booking.final_amount,
-                reason,
-              })
-            )
-          )
-        }
-      } catch (e) {
-        console.error('Failed to notify venue admins about cancellation:', e)
-      }
-    })()
+    // TODO: En una sola sede, las notificaciones a admins se pueden manejar de forma diferente
+    // Por ahora, se omiten las notificaciones automáticas a venue_admins
 
     // Notify waitlist users
     await this.notifyWaitlist(booking.court_id, booking.start_datetime, booking.end_datetime)

@@ -20,3 +20,4 @@ export const DEFAULT_VENUE_ADMIN_PERMISSIONS: VenueAdminPermissions = {
 
 export const isAdmin = (role?: string | null) => role === 'venue_admin' || role === 'super_admin'
 export const isSuperAdmin = (role?: string | null) => role === 'super_admin'
+export const isVenueAdmin = (role?: string | null) => role === 'venue_admin'
