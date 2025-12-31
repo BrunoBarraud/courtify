@@ -20,10 +20,9 @@ export default function SupabaseProvider({
     if (!shouldForce) return
 
     // Avoid logging out on auth pages and avoid repeating within the same tab
-    const isAuthRoute = typeof window !== 'undefined' && (
-      window.location.pathname.startsWith('/auth')
-    )
-    const doneKey = 'courtify.forcedLogoutDone'
+    const isAuthRoute =
+      typeof window !== 'undefined' && window.location.pathname.startsWith('/auth')
+    const doneKey = 'matchup.forcedLogoutDone'
     const alreadyDone = typeof window !== 'undefined' && sessionStorage.getItem(doneKey) === '1'
     if (isAuthRoute || alreadyDone) return
 
@@ -35,7 +34,7 @@ export default function SupabaseProvider({
           sessionStorage.setItem(doneKey, '1')
         } catch {}
       })
-    
+
     // run only once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

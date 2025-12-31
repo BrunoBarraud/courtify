@@ -33,7 +33,7 @@ export class EmailNotificationObserver implements NotificationObserver {
 
       // Get email template
       const template = await this.getEmailTemplate(notification.type)
-      
+
       // Replace variables in template
       const emailBody = this.replaceVariables(template, {
         user_name: profile.full_name || 'User',
@@ -43,7 +43,7 @@ export class EmailNotificationObserver implements NotificationObserver {
       // Send email
       await sgMail.send({
         to: profile.email,
-        from: process.env.SENDGRID_FROM_EMAIL || 'noreply@courtify.com',
+        from: process.env.SENDGRID_FROM_EMAIL || 'noreply@matchup.com',
         subject: notification.title,
         text: notification.body,
         html: emailBody,
@@ -73,9 +73,12 @@ export class EmailNotificationObserver implements NotificationObserver {
   /**
    * Replace variables in template
    */
-  private replaceVariables(template: string, variables: Record<string, any>): string {
+  private replaceVariables(
+    template: string,
+    variables: Record<string, string | number | boolean>
+  ): string {
     let result = template
-    
+
     for (const [key, value] of Object.entries(variables)) {
       const regex = new RegExp(`{{${key}}}`, 'g')
       result = result.replace(regex, String(value))

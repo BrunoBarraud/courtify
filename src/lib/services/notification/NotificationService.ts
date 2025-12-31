@@ -198,7 +198,7 @@ export class NotificationService {
       userId: data.userId,
       type: 'account_welcome',
       title: 'Bienvenido a la app',
-      body: `Bienvenido a Courtify, ${name}. Ya podés empezar a reservar tus turnos.`,
+      body: `Bienvenido a MatchUp, ${name}. Ya podés empezar a reservar tus turnos.`,
       data,
       channels: ['email', 'push'],
     })
@@ -239,7 +239,9 @@ export class NotificationService {
       userId: data.userId,
       type: 'booking_reminder',
       title: 'Recordatorio de reserva',
-      body: `Che, no te olvides. Mañana jugás a las ${formattedTime} hs${data.venueName ? ` en ${data.venueName}` : ''}.`,
+      body: `Che, no te olvides. Mañana jugás a las ${formattedTime} hs${
+        data.venueName ? ` en ${data.venueName}` : ''
+      }.`,
       data,
       channels: ['email', 'push'],
     })
@@ -335,7 +337,9 @@ export class NotificationService {
       userId: data.userId,
       type: 'booking_cancelled_by_club',
       title: 'Turno cancelado por el club',
-      body: `Malas noticias: ${data.venueName} tuvo que cancelar tu turno del ${formattedDate} (por ejemplo, por lluvia). ${
+      body: `Malas noticias: ${
+        data.venueName
+      } tuvo que cancelar tu turno del ${formattedDate} (por ejemplo, por lluvia). ${
         data.reason || 'Contactate con el club para reprogramar.'
       }`,
       data,
@@ -477,9 +481,9 @@ export class NotificationService {
       userId: data.adminId,
       type: 'admin_booking_cancelled',
       title: `Reserva cancelada - ${data.bookingNumber}`,
-      body: `Se canceló la reserva de ${data.courtName} en ${data.venueName} (del ${startStr} a ${endStr}).${
-        data.reason ? ` Motivo: ${data.reason}.` : ''
-      }`,
+      body: `Se canceló la reserva de ${data.courtName} en ${
+        data.venueName
+      } (del ${startStr} a ${endStr}).${data.reason ? ` Motivo: ${data.reason}.` : ''}`,
       data: {
         bookingId: data.bookingId,
         bookingNumber: data.bookingNumber,
@@ -511,7 +515,9 @@ export class NotificationService {
       userId: data.adminId,
       type: 'admin_daily_summary',
       title: `Resumen diario de reservas - ${data.venueName}`,
-      body: `Fecha ${new Date(data.date).toLocaleDateString('es-AR')}: ${data.totalBookings} reservas.`,
+      body: `Fecha ${new Date(data.date).toLocaleDateString('es-AR')}: ${
+        data.totalBookings
+      } reservas.`,
       data,
       channels: ['email'],
     })

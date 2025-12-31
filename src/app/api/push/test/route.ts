@@ -3,24 +3,29 @@ import { cookies } from 'next/headers'
 import { createServerClient } from '@/lib/supabase/client'
 import { notificationService } from '@/lib/services/notification/NotificationService'
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const supabase = createServerClient(() => cookies())
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     await notificationService.notify({
       userId: session.user.id,
       type: 'general',
       title: 'Notificación de prueba',
-      body: 'Este es un push de prueba desde Courtify.',
+      body: 'Este es un push de prueba desde MatchUp.',
       data: { source: 'manual_test', sentAt: new Date().toISOString() },
       channels: ['push'],
     })
 
     return NextResponse.json({ success: true })
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Push test error:', e)
-    return NextResponse.json({ error: e.message || 'Failed to send test push' }, { status: 500 })
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : 'Failed to send test push' },
+      { status: 500 }
+    )
   }
 }

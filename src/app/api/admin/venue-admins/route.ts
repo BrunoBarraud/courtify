@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@/lib/supabase/client'
+import { DEFAULT_VENUE_ADMIN_PERMISSIONS } from '@/lib/auth/roles'
 
 async function requireSuperAdmin() {
   const supabase = createServerClient(() => cookies())
@@ -42,9 +43,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  const { error } = await supabase
-    .from('venue_admins')
-    .insert({ user_id: userId, venue_id: venueId })
+  const { error } = await supabase.from('venue_admins').insert({
+    user_id: userId,
+    venue_id: venueId,
+    permissions: DEFAULT_VENUE_ADMIN_PERMISSIONS,
+  })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   return NextResponse.json({ ok: true })

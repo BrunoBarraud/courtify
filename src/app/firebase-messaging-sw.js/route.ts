@@ -22,7 +22,7 @@ export async function GET(_req: NextRequest) {
       });
       const messaging = firebase.messaging();
       messaging.onBackgroundMessage(function(payload) {
-        const title = (payload && payload.notification && payload.notification.title) || 'Courtify';
+        const title = (payload && payload.notification && payload.notification.title) || 'MatchUp';
         const options = {
           body: (payload && payload.notification && payload.notification.body) || 'Nueva notificación',
           icon: '/icons/icon-192x192.png',

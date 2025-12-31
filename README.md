@@ -1,10 +1,11 @@
-# Courtify - Plataforma de Reservas de Canchas
+# MatchUp - Plataforma de Reservas de Canchas
 
 Una plataforma SaaS integral para gestionar reservas de canchas, abonos, torneos y pagos para clubes y complejos deportivos.
 
 ## 🚀 Funcionalidades
 
 ### Funcionalidades principales
+
 - **Reservas online**: Disponibilidad en tiempo real y confirmación inmediata
 - **Multi-sede**: Administrá múltiples ubicaciones desde una sola plataforma
 - **Pagos**: Integración con Stripe y Mercado Pago
@@ -16,6 +17,7 @@ Una plataforma SaaS integral para gestionar reservas de canchas, abonos, torneos
 - **Facturación**: Generación automática de comprobantes
 
 ### Roles de usuario
+
 - **Clientes**: Reservan canchas, gestionan abonos, participan en torneos
 - **Administradores de sede**: Gestionan canchas, reservas y configuración de la sede
 - **Super Administradores**: Administración global de la plataforma
@@ -23,6 +25,7 @@ Una plataforma SaaS integral para gestionar reservas de canchas, abonos, torneos
 ## 🏗️ Arquitectura
 
 ### Stack tecnológico
+
 - **Frontend**: Next.js 14 (App Router), React, TypeScript, TailwindCSS
 - **Backend**: Rutas API de Next.js
 - **Base de datos**: Supabase (PostgreSQL)
@@ -32,6 +35,7 @@ Una plataforma SaaS integral para gestionar reservas de canchas, abonos, torneos
 - **Testing**: Jest (Unitario), Playwright (E2E)
 
 ### Patrones de diseño
+
 - **Observer**: Sistema de notificaciones con múltiples canales (email, push, SMS)
 - **Strategy**: Procesamiento de pagos con pasarelas intercambiables
 - **Repository**: Abstracción de acceso a datos
@@ -40,6 +44,7 @@ Una plataforma SaaS integral para gestionar reservas de canchas, abonos, torneos
 ## 📦 Instalación
 
 ### Requisitos previos
+
 - Node.js 18+
 - npm 9+
 - Cuenta de Supabase
@@ -51,22 +56,26 @@ Una plataforma SaaS integral para gestionar reservas de canchas, abonos, torneos
 ### Configuración
 
 1. **Clonar el repositorio**
+
 ```bash
 git clone <repository-url>
-cd courtify
+cd matchup
 ```
 
 2. **Instalar dependencias**
+
 ```bash
 npm install
 ```
 
 3. **Configurar variables de entorno**
+
 ```bash
 cp .env.example .env
 ```
 
 Editá `.env` con tus credenciales:
+
 ```env
 # Application
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -88,7 +97,7 @@ MERCADOPAGO_ACCESS_TOKEN=your_mercadopago_access_token
 
 # SendGrid
 SENDGRID_API_KEY=your_sendgrid_api_key
-SENDGRID_FROM_EMAIL=noreply@courtify.com
+SENDGRID_FROM_EMAIL=noreply@matchup.com
 
 # Firebase Cloud Messaging
 FIREBASE_PROJECT_ID=your_firebase_project_id
@@ -100,26 +109,31 @@ NEXT_PUBLIC_FIREBASE_VAPID_KEY=your_firebase_vapid_key
 4. **Configurar Supabase**
 
 Instalar Supabase CLI:
+
 ```bash
 npm install -g supabase
 ```
 
 Inicializar Supabase:
+
 ```bash
 supabase init
 ```
 
 Vincular a tu proyecto:
+
 ```bash
 supabase link --project-ref your-project-ref
 ```
 
 Ejecutar migraciones:
+
 ```bash
 supabase db push
 ```
 
 5. **Levantar el servidor de desarrollo**
+
 ```bash
 npm run dev
 ```
@@ -129,16 +143,19 @@ Abrí [http://localhost:3000](http://localhost:3000) en tu navegador.
 ## 🧪 Testing
 
 ### Tests unitarios
+
 ```bash
 npm test
 ```
 
 ### Tests E2E
+
 ```bash
 npm run test:e2e
 ```
 
 ### Tests E2E con UI
+
 ```bash
 npm run test:e2e:ui
 ```
@@ -146,6 +163,7 @@ npm run test:e2e:ui
 ## 📊 Esquema de base de datos
 
 ### Tablas principales
+
 - **profiles**: Perfiles de usuario y roles
 - **venues**: Clubes/instalaciones deportivas
 - **courts**: Canchas dentro de cada sede
@@ -165,32 +183,38 @@ Ver `supabase/migrations/20250101000000_initial_schema.sql` para el esquema comp
 ## 🔌 Endpoints API
 
 ### Autenticación
+
 - `POST /api/auth/signup` - Registrar usuario
 - `POST /api/auth/signin` - Iniciar sesión
 - `POST /api/auth/signout` - Cerrar sesión
 
 ### Reservas
+
 - `GET /api/bookings` - Obtener reservas del usuario
 - `POST /api/bookings` - Crear nueva reserva
 - `GET /api/bookings/[id]` - Obtener detalle de una reserva
 - `POST /api/bookings/[id]/cancel` - Cancelar reserva
 
 ### Canchas
+
 - `GET /api/courts` - Listar canchas
 - `GET /api/courts/[id]` - Obtener detalle de cancha
 - `GET /api/courts/[id]/availability` - Consultar disponibilidad
 
 ### Pagos
+
 - `POST /api/payments/create` - Crear intento de pago
 - `POST /api/payments/webhook` - Handler de webhook de pagos
 
 ### Sedes
+
 - `GET /api/venues` - Listar sedes
 - `GET /api/venues/[id]` - Obtener detalle de sede
 
 ## 🎨 Componentes UI
 
 Construido con Radix UI y TailwindCSS para una interfaz moderna y accesible:
+
 - Button, Card, Input, Label
 - Dialog, Dropdown, Select, Tabs
 - Toast notifications
@@ -207,28 +231,33 @@ Construido con Radix UI y TailwindCSS para una interfaz moderna y accesible:
 ## 🚀 Despliegue
 
 ### Vercel (Recomendado)
+
 ```bash
 npm install -g vercel
 vercel
 ```
 
 ### Docker
+
 ```bash
-docker build -t courtify .
-docker run -p 3000:3000 courtify
+docker build -t matchup .
+docker run -p 3000:3000 matchup
 ```
 
 ### Variables de entorno
+
 Asegurate de configurar todas las variables en tu plataforma de despliegue.
 
 ## 📝 Guías de desarrollo
 
 ### Estilo de código
+
 - TypeScript en modo estricto
 - ESLint para calidad de código
 - Prettier para formato (recomendado)
 
 ### Flujo de trabajo con Git
+
 ```bash
 git checkout -b feature/your-feature
 git commit -m "feat: add your feature"
@@ -236,6 +265,7 @@ git push origin feature/your-feature
 ```
 
 ### Convención de commits
+
 - `feat:` Nueva funcionalidad
 - `fix:` Corrección de bug
 - `docs:` Documentación
@@ -247,11 +277,13 @@ git push origin feature/your-feature
 ## 📚 Documentación
 
 ### Capa de servicios
+
 - `BookingService`: Maneja lógica de reservas y disponibilidad
 - `PaymentService`: Gestiona pagos con múltiples pasarelas
 - `NotificationService`: Envía notificaciones por múltiples canales
 
 ### Patrones de diseño
+
 - **Observer**: `NotificationService` con `EmailNotificationObserver` y `PushNotificationObserver`
 - **Strategy**: `PaymentService` con `StripePaymentStrategy` y `MercadoPagoPaymentStrategy`
 
@@ -269,7 +301,7 @@ Este proyecto es software propietario. Todos los derechos reservados.
 
 ## 🆘 Soporte
 
-Para soporte, escribí a support@courtify.com o abrí un issue en el repositorio.
+Para soporte, escribí a support@matchup.com o abrí un issue en el repositorio.
 
 ## 🗺️ Roadmap
 
@@ -285,7 +317,7 @@ Para soporte, escribí a support@courtify.com o abrí un issue en el repositorio
 
 ## 👥 Equipo
 
-Hecho con ❤️ por el equipo de Courtify.
+Hecho con ❤️ por el equipo de MatchUp.
 
 ---
 

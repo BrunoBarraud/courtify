@@ -6,13 +6,12 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Home, Calendar, Users, BarChart, Trophy } from 'lucide-react'
 import dynamic from 'next/dynamic'
-const NotificationsBell = dynamic(() => import('@/components/realtime/NotificationsBell'), { ssr: false })
+const NotificationsBell = dynamic(() => import('@/components/realtime/NotificationsBell'), {
+  ssr: false,
+})
 
 // Importar dinámicamente para evitar problemas de importación
-const UserMenu = dynamic(
-  () => import('@/components/auth/UserMenu'),
-  { ssr: false }
-)
+const UserMenu = dynamic(() => import('@/components/auth/UserMenu'), { ssr: false })
 
 const MainNav = () => {
   const pathname = usePathname()
@@ -46,11 +45,11 @@ const MainNav = () => {
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center space-x-2">
             <Trophy className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">Courtify</span>
+            <span className="text-xl font-bold">MatchUp</span>
           </Link>
-          
+
           <nav className="hidden md:flex items-center space-x-1 ml-4">
-            {navItems.map((item) => (
+            {navItems.map(item => (
               <Button
                 key={item.href}
                 asChild
@@ -71,7 +70,7 @@ const MainNav = () => {
             ))}
           </nav>
         </div>
-        
+
         <div className="ml-auto flex items-center space-x-4">
           <NotificationsBell />
           <UserMenu />
