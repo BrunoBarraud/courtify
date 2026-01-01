@@ -46,30 +46,8 @@ export async function POST(req: NextRequest) {
     }
 
     // For each venue, notify its admins
-    const notifyPromises: Promise<unknown>[] = []
-    for (const [venueId, info] of countsByVenue.entries()) {
-      const { data: admins } = await supabase
-        .from('venue_admins')
-        .select('user_id')
-        .eq('venue_id', venueId)
-
-      if (!admins || admins.length === 0) continue
-
-      for (const a of admins) {
-        notifyPromises.push(
-          notificationService.sendAdminDailySummary({
-            adminId: (a as any).user_id,
-            venueName: info.name,
-            date: start.toISOString(),
-            totalBookings: info.count,
-          })
-        )
-      }
-    }
-
-    if (notifyPromises.length > 0) {
-      await Promise.allSettled(notifyPromises)
-    }
+    // TODO: En una sola sede, implementar notificaciones a admins de forma diferente
+    // Por ahora, las notificaciones diarias están deshabilitadas.
 
     return NextResponse.json({ ok: true, venues: countsByVenue.size })
   } catch (e: unknown) {

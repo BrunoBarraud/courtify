@@ -12,30 +12,23 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createServerClient(() => cookies())
     const { searchParams } = new URL(request.url)
-    
+
     // Query parameters
     const city = searchParams.get('city')
     const country = searchParams.get('country')
     const search = searchParams.get('search')
-    
-    let query = supabase
-      .from('venues')
-      .select(`
-        *,
-        courts(count)
-      `)
-      .eq('is_active', true)
-      .order('name')
+
+    let query = supabase.from('venues').select('*').eq('is_active', true).order('name')
 
     // Apply filters
     if (city) {
       query = query.ilike('city', `%${city}%`)
     }
-    
+
     if (country) {
       query = query.eq('country', country)
     }
-    
+
     if (search) {
       query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`)
     }
@@ -43,28 +36,24 @@ export async function GET(request: NextRequest) {
     const { data: venues, error } = await query
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ venues })
   } catch (error) {
     console.error('Failed to fetch venues:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch venues' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch venues' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerClient(() => cookies())
-    
+
     // Check authentication
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -94,30 +83,15 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    // Add user as venue admin (admin client to bypass RLS)
-    await admin.from('venue_admins').insert({
-      venue_id: venue.id,
-      user_id: session.user.id,
-      permissions: {
-        can_manage_bookings: true,
-        can_manage_courts: true,
-        can_manage_staff: true,
-        can_view_reports: true,
-      },
-    })
+    // En una sola sede, no necesitamos asignar venue_admins
+    // Los admins tienen acceso a todas las sedes por defecto
 
     return NextResponse.json({ venue }, { status: 201 })
   } catch (error) {
     console.error('Venue creation error:', error)
-    return NextResponse.json(
-      { error: 'Failed to create venue' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to create venue' }, { status: 500 })
   }
 }

@@ -6,7 +6,9 @@ import { isAdmin } from '@/lib/auth/roles'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = createServerClient(() => cookies())
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   if (!session) redirect('/auth/signin')
 
   const { data: profile } = await supabase
@@ -22,8 +24,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <aside className="border-b lg:border-b-0 lg:border-r bg-muted/40">
         <div className="p-4 font-bold">Admin</div>
         <nav className="flex flex-col p-2 gap-1 text-sm">
-          <Link className="px-3 py-2 rounded hover:bg-muted" href="/admin">Panel</Link>
-          <Link className="px-3 py-2 rounded hover:bg-muted" href="/admin/venues">Sedes</Link>
+          <Link className="px-3 py-2 rounded hover:bg-muted" href="/admin/bookings">
+            Reservas
+          </Link>
+          <Link className="px-3 py-2 rounded hover:bg-muted" href="/admin/venue/edit">
+            Editar Complejo
+          </Link>
+          <Link className="px-3 py-2 rounded hover:bg-muted" href="/admin/courts">
+            Canchas
+          </Link>
+          <Link className="px-3 py-2 rounded hover:bg-muted" href="/admin/users">
+            Usuarios
+          </Link>
         </nav>
       </aside>
       <main>{children}</main>

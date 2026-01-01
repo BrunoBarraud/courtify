@@ -6,7 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Banknote, CreditCard, Wallet } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 export default function NewBookingPage() {
   const router = useRouter()
@@ -30,6 +37,7 @@ export default function NewBookingPage() {
   >([])
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null)
+  const [showCashDialog, setShowCashDialog] = useState(false)
 
   useEffect(() => {
     // Prefill date with today by default
@@ -41,7 +49,7 @@ export default function NewBookingPage() {
   }, [])
 
   useEffect(() => {
-    // Auto-load default venue if none preselected
+    // Auto-load la única sede disponible
     const fetchDefaultVenue = async () => {
       if (selectedVenueId) return
       try {
@@ -49,6 +57,8 @@ export default function NewBookingPage() {
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'No se pudieron cargar las sedes')
         const venues = data.venues || []
+
+        // Cargar la primera (y única) sede
         if (venues.length > 0) {
           setSelectedVenueId(venues[0].id)
         }
@@ -287,7 +297,7 @@ export default function NewBookingPage() {
                     Elegí un método de pago para confirmar
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="grid gap-3 md:grid-cols-3">
                   <Button
                     type="button"
                     onClick={() =>
@@ -295,23 +305,103 @@ export default function NewBookingPage() {
                         `/payments/start?bookingId=${createdBookingId}&method=mercadopago`
                       )
                     }
-                    className="flex-1"
+                    className="flex-1 gap-2"
                     size="lg"
                   >
-                    Pagar con Mercado Pago
+                    <Wallet className="h-4 w-4" />
+                    Mercado Pago
                   </Button>
                   <Button
                     type="button"
                     variant="secondary"
                     onClick={() => router.push(`/payments/checkout?bookingId=${createdBookingId}`)}
-                    className="flex-1"
+                    className="flex-1 gap-2"
                     size="lg"
                   >
-                    Pagar con Stripe
+                    <CreditCard className="h-4 w-4" />
+                    Stripe
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCashDialog(true)}
+                    className="flex-1 gap-2"
+                    size="lg"
+                  >
+                    <Banknote className="h-4 w-4" />
+                    Efectivo
                   </Button>
                 </div>
               </div>
             )}
+
+            {/* Dialog para pago en efectivo */}
+            <Dialog open={showCashDialog} onOpenChange={setShowCashDialog}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Banknote className="h-5 w-5 text-primary" />
+                    Pago en Efectivo
+                  </DialogTitle>
+                  <DialogDescription className="space-y-4 pt-4">
+                    <div className="rounded-lg bg-primary/10 p-4 border-2 border-primary/20">
+                      <p className="text-foreground font-medium mb-2">
+                        Tu reserva ha sido creada exitosamente.
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Para confirmarla, deberás realizar el pago en efectivo en:
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2">
+                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold text-primary">1</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">Secretaría del complejo</p>
+                          <p className="text-sm text-muted-foreground">
+                            Horario: Lunes a Viernes 9:00 - 18:00hs
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold text-primary">2</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">Pórtico de entrada</p>
+                          <p className="text-sm text-muted-foreground">Al momento de tu reserva</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="rounded-lg bg-yellow-500/10 p-4 border border-yellow-500/20">
+                      <p className="text-sm text-foreground">
+                        <strong>Importante:</strong> Tu reserva quedará en estado &quot;Pendiente de
+                        pago&quot; hasta que se confirme el pago en efectivo.
+                      </p>
+                    </div>
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowCashDialog(false)}
+                    className="flex-1"
+                  >
+                    Volver
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowCashDialog(false)
+                      router.push('/bookings')
+                    }}
+                    className="flex-1"
+                  >
+                    Entendido
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </form>
         </CardContent>
       </Card>

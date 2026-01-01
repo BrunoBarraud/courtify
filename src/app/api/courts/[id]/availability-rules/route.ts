@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@/lib/supabase/client'
 
-async function assertVenueAdmin(supabase: ReturnType<typeof createServerClient>, userId: string, courtId: string) {
+async function assertVenueAdmin(
+  supabase: ReturnType<typeof createServerClient>,
+  userId: string,
+  courtId: string
+) {
   // Get court to find its venue
   const { data: court } = await supabase
     .from('courts')
@@ -12,29 +16,13 @@ async function assertVenueAdmin(supabase: ReturnType<typeof createServerClient>,
   if (!court) return false
 
   // Check profile role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .single()
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', userId).single()
 
-  if (profile?.role === 'super_admin') return true
-
-  // Check venue_admins membership
-  const { data: admin } = await supabase
-    .from('venue_admins')
-    .select('id')
-    .eq('venue_id', court.venue_id)
-    .eq('user_id', userId)
-    .single()
-
-  return !!admin
+  // En una sola sede, super_admin y venue_admin tienen acceso
+  return profile?.role === 'super_admin' || profile?.role === 'venue_admin'
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = createServerClient(() => cookies())
     const { data: rules, error } = await supabase
@@ -51,13 +39,12 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = createServerClient(() => cookies())
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Check admin of venue owning this court
@@ -75,14 +62,8 @@ export async function DELETE(
       .eq('id', user.id)
       .single()
 
-    if (profile?.role !== 'super_admin') {
-      const { data: admin } = await supabase
-        .from('venue_admins')
-        .select('id')
-        .eq('venue_id', court.venue_id)
-        .eq('user_id', user.id)
-        .single()
-      if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (profile?.role !== 'super_admin' && profile?.role !== 'venue_admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -103,13 +84,12 @@ export async function DELETE(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = createServerClient(() => cookies())
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const isAdmin = await assertVenueAdmin(supabase, user.id, params.id)
@@ -119,14 +99,22 @@ export async function POST(
     const payload = {
       court_id: params.id,
       day_of_week: body.day_of_week, // 'monday' | ...
-      start_time: body.start_time,   // 'HH:MM'
-      end_time: body.end_time,       // 'HH:MM'
+      start_time: body.start_time, // 'HH:MM'
+      end_time: body.end_time, // 'HH:MM'
       is_available: body.is_available ?? true,
       price_override: body.price_override ?? null,
     }
 
     // validations
-    const daySet = new Set(['monday','tuesday','wednesday','thursday','friday','saturday','sunday'])
+    const daySet = new Set([
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ])
     const timeRe = /^\d{2}:\d{2}$/
     if (!payload.day_of_week || !daySet.has(payload.day_of_week)) {
       return NextResponse.json({ error: 'Invalid day_of_week' }, { status: 400 })
@@ -138,7 +126,10 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid end_time' }, { status: 400 })
     }
     if (payload.end_time <= payload.start_time) {
-      return NextResponse.json({ error: 'end_time must be greater than start_time' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'end_time must be greater than start_time' },
+        { status: 400 }
+      )
     }
 
     // prevent overlapping rules on same day
@@ -150,7 +141,9 @@ export async function POST(
     if (overlapErr) {
       return NextResponse.json({ error: overlapErr.message }, { status: 400 })
     }
-    const overlaps = (existing || []).some((r: any) => !(payload.end_time <= r.start_time || payload.start_time >= r.end_time))
+    const overlaps = (existing || []).some(
+      (r: any) => !(payload.end_time <= r.start_time || payload.start_time >= r.end_time)
+    )
     if (overlaps) {
       return NextResponse.json({ error: 'Overlapping rule exists for this day' }, { status: 409 })
     }

@@ -21,11 +21,15 @@ export default function NotificationsListener() {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`,
         },
-        (payload) => {
+        payload => {
           const row = payload.new as {
             title?: string
             body?: string
+            channel?: string
           }
+          // Solo mostrar toast para notificaciones push (evitar duplicados)
+          if (row?.channel !== 'push') return
+
           const title = row?.title || 'Notificación'
           const body = row?.body || ''
           toast(title, { description: body })

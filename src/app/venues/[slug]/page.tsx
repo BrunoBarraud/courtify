@@ -2,9 +2,21 @@ import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createServerClient } from '@/lib/supabase/client'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { MapPin } from 'lucide-react'
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Wifi,
+  Car,
+  Users,
+  Coffee,
+  Calendar,
+  Share2,
+  Info,
+} from 'lucide-react'
 
 interface Props {
   params: { slug: string }
@@ -42,57 +54,267 @@ export default async function VenueDetailPage({ params }: Props) {
   }
 
   return (
-    <div className="container py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{venue.name}</h1>
-        <p className="text-muted-foreground flex items-center gap-1">
-          <MapPin className="h-4 w-4" /> {venue.address}, {venue.city}{venue.state ? `, ${venue.state}` : ''}, {venue.country}
-        </p>
+    <div className="min-h-screen bg-background pb-12">
+      {/* --- ESTRUCTURA TIPO FACEBOOK --- */}
+      <div className="bg-background mb-8 shadow-sm">
+        {/* 1. LA FOTO DE PORTADA (Banner) */}
+        {/* Ya no tiene texto encima, así que no necesita un overlay oscuro fuerte */}
+        <div className="relative h-[300px] md:h-[400px] w-full bg-slate-200">
+          {venue.cover_image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={venue.cover_image_url} alt="Portada" className="h-full w-full object-cover" />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center bg-gradient-to-r from-slate-300 to-slate-400">
+              <MapPin className="h-20 w-20 text-slate-500/50" />
+            </div>
+          )}
+        </div>
+
+        {/* 2. CONTENEDOR DE INFO (Avatar + Texto + Acciones) */}
+        {/* Este contenedor está sobre el fondo blanco */}
+        <div className="container px-4 md:px-8 pb-6 relative">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-start">
+            {/* A. EL AVATAR (Foto de Perfil) */}
+            {/* Usamos margen negativo superior (-mt) para subirlo y que pise el banner */}
+            <div className="-mt-24 md:-mt-32 relative z-10 flex-shrink-0 mx-auto md:mx-0">
+              <div className="w-40 h-40 md:w-52 md:h-52 rounded-full overflow-hidden shadow-2xl ring-4 ring-background">
+                {venue.profile_image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={venue.profile_image_url}
+                    alt="Perfil"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-slate-100 flex items-center justify-center">
+                    <MapPin className="h-16 w-16 text-slate-400" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* B. LA INFORMACIÓN Y ACCIONES */}
+            {/* Texto oscuro sobre fondo blanco */}
+            <div className="flex-1 pt-2 md:pt-6 text-center md:text-left truncate w-full">
+              {/* Título y Ubicación */}
+              <h1 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mb-2 truncate">
+                {venue.name}
+              </h1>
+              <div className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground mb-6">
+                <MapPin className="h-4 w-4" />
+                <p className="text-sm md:text-base font-medium truncate">
+                  {venue.address}, {venue.city}
+                </p>
+              </div>
+
+              {/* C. BARRA DE ACCIONES (Botones tipo FB) */}
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4">
+                {/* Botón Principal (Llamado a la acción) */}
+                <Button className="gap-2 font-semibold px-6">
+                  <Calendar className="h-4 w-4" />
+                  Reservar Ahora
+                </Button>
+
+                {/* Botones Secundarios (Gris claro) */}
+                <Button variant="secondary" className="gap-2 font-semibold text-foreground">
+                  <Share2 className="h-4 w-4" />
+                  Compartir
+                </Button>
+                {venue.phone && (
+                  <Button
+                    variant="secondary"
+                    asChild
+                    className="gap-2 font-semibold text-foreground"
+                  >
+                    <a href={`tel:${venue.phone}`}>
+                      <Phone className="h-4 w-4" />
+                      Llamar
+                    </a>
+                  </Button>
+                )}
+
+                {/* Botón de menú/más opciones */}
+                <Button variant="secondary" size="icon" className="text-foreground">
+                  <Info className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Opcional: Una línea divisoria tipo pestañas de navegación de FB */}
+          <div className="mt-8 border-t pt-4 hidden md:flex gap-6 text-sm font-semibold text-muted-foreground">
+            <div className="text-primary border-b-2 border-primary pb-2 px-1 cursor-pointer">
+              Canchas y Servicios
+            </div>
+            <div className="hover:text-foreground pb-2 px-1 cursor-pointer">Información</div>
+            <div className="hover:text-foreground pb-2 px-1 cursor-pointer">Fotos</div>
+          </div>
+        </div>
       </div>
 
-      {venue.cover_image_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={venue.cover_image_url} alt={venue.name} className="mb-8 h-64 w-full rounded-lg object-cover" />
-      ) : null}
+      {/* --- CONTENIDO PRINCIPAL (Layout de 2 columnas opcional, o una sola) --- */}
+      {/* Para simplificar, mantenemos una columna central por ahora */}
+      <div className="container container-slim py-8 space-y-10">
+        {/* Descripción */}
+        {venue.description && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Detalles</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                {venue.description}
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
-      {venue.description ? (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Descripción</CardTitle>
-            <CardDescription>Conocé más sobre la sede</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground whitespace-pre-wrap">{venue.description}</p>
-          </CardContent>
-        </Card>
-      ) : null}
+        {/* Canchas Disponibles */}
+        <div id="canchas">
+          <div className="mb-6 flex items-end justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-1">Canchas Disponibles</h2>
+              <p className="text-muted-foreground">Elegí donde jugar</p>
+            </div>
+          </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Canchas disponibles</CardTitle>
-          <CardDescription>Elegí una cancha para continuar</CardDescription>
-        </CardHeader>
-        <CardContent>
           {courts && courts.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {courts.map((c: Court) => (
-                <div key={c.id} className="p-4 border rounded-lg">
-                  <div className="font-semibold mb-1">{c.name}</div>
-                  <div className="text-sm text-muted-foreground mb-3">
-                    Tipo: {c.court_type} • {c.is_indoor ? 'Techada' : 'Al aire libre'}
+                <Card
+                  key={c.id}
+                  className="overflow-hidden hover:shadow-lg transition-all duration-300 group flex flex-col"
+                >
+                  {/* Imagen de la cancha */}
+                  <div className="relative h-48 bg-slate-800 overflow-hidden">
+                    {/* (Acá iría la foto real de la cancha si tuvieras) */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+
+                    <div className="absolute bottom-4 left-4 z-20">
+                      <h3 className="text-white font-bold text-xl">{c.name}</h3>
+                      <p className="text-white/80 text-sm">{c.court_type}</p>
+                    </div>
+
+                    {/* Badge techada */}
+                    <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-medium text-white uppercase tracking-wider z-20">
+                      {c.is_indoor ? 'Techada' : 'Aire libre'}
+                    </div>
                   </div>
-                  <div className="text-sm font-medium mb-3">${c.hourly_rate} por hora</div>
-                  <Link href={`/bookings/new?venueId=${venue.id}&courtId=${c.id}`}>
-                    <Button className="w-full">Reservar</Button>
-                  </Link>
-                </div>
+
+                  <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Users className="h-4 w-4" />
+                        {c.court_type.includes('5') ? '5 vs 5' : '7 vs 7'}
+                      </div>
+                      <div className="text-lg font-bold text-primary">
+                        ${c.hourly_rate}{' '}
+                        <span className="text-xs font-normal text-muted-foreground">/h</span>
+                      </div>
+                    </div>
+
+                    <Link
+                      href={`/bookings/new?venueId=${venue.id}&courtId=${c.id}`}
+                      className="w-full block mt-2"
+                    >
+                      <Button className="w-full gap-2" variant="default">
+                        Reservar Turno
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           ) : (
-            <div className="text-muted-foreground">No hay canchas activas.</div>
+            <Card className="p-8 text-center border-dashed bg-muted/30">
+              <p className="text-muted-foreground">No hay canchas habilitadas.</p>
+            </Card>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Servicios e Instalaciones (Grid más simple tipo FB) */}
+        <div>
+          <h2 className="text-xl font-bold mb-4">Servicios</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {/* Podrías hacer esto dinámico si tenés los datos en la DB */}
+            {[
+              { icon: Car, label: 'Estacionamiento' },
+              { icon: Users, label: 'Vestuarios' },
+              { icon: Coffee, label: 'Bufet' },
+              { icon: Wifi, label: 'WiFi' },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 p-3 rounded-lg border bg-card text-card-foreground shadow-sm"
+              >
+                <item.icon className="h-5 w-5 text-muted-foreground" />
+                <span className="font-medium">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Ubicación y Contacto (Layout simplificado) */}
+        <div className="grid md:grid-cols-3 gap-8 items-start">
+          {/* Mapa ocupa 2 columnas */}
+          <Card className="md:col-span-2 overflow-hidden">
+            <div className="aspect-[16/9] w-full bg-muted relative">
+              {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
+                <iframe
+                  src={`https://www.google.com/maps/embed/v1/place?key=${
+                    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+                  }&q=${encodeURIComponent(venue.address + ', ' + venue.city)}`}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                ></iframe>
+              )}
+            </div>
+          </Card>
+
+          {/* Info de contacto ocupa 1 columna */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Información</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-3">
+                <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="font-medium">{venue.address}</p>
+                  <p className="text-sm text-muted-foreground">{venue.city}</p>
+                </div>
+              </div>
+              {venue.phone && (
+                <div className="flex items-center gap-3">
+                  <Phone className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <a href={`tel:${venue.phone}`} className="hover:underline">
+                    {venue.phone}
+                  </a>
+                </div>
+              )}
+              {venue.email && (
+                <div className="flex items-center gap-3 break-all">
+                  <Mail className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <a href={`mailto:${venue.email}`} className="hover:underline">
+                    {venue.email}
+                  </a>
+                </div>
+              )}
+
+              <div className="pt-4 border-t">
+                <h4 className="font-medium mb-2 flex items-center gap-2">
+                  <Clock className="h-4 w-4" /> Horarios
+                </h4>
+                <p className="text-sm text-muted-foreground">Lun a Vie: 08:00 - 23:00</p>
+                <p className="text-sm text-muted-foreground">Sáb y Dom: 09:00 - 00:00</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import { CheckCircle2, Banknote } from 'lucide-react'
 
 const BOOKING_STATUS_OPTIONS = ['pending', 'confirmed', 'completed', 'cancelled', 'no_show']
 const PAYMENT_STATUS_OPTIONS = ['pending', 'processing', 'completed', 'failed', 'refunded']
@@ -83,7 +84,10 @@ export default function AdminBookingsPage() {
       const json = await res.json()
       if (!res.ok) {
         const errorMessage =
-          typeof json === 'object' && json && 'error' in json && typeof (json as { error?: unknown }).error === 'string'
+          typeof json === 'object' &&
+          json &&
+          'error' in json &&
+          typeof (json as { error?: unknown }).error === 'string'
             ? (json as { error: string }).error
             : 'No se pudieron cargar las reservas'
         throw new Error(errorMessage)
@@ -120,6 +124,27 @@ export default function AdminBookingsPage() {
     router.replace('/admin/bookings')
   }
 
+  const markAsPaid = async (bookingId: string) => {
+    if (!confirm('¿Confirmar que se recibió el pago en efectivo?')) return
+
+    try {
+      const res = await fetch(`/api/admin/bookings/${bookingId}/mark-paid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_method: 'cash' }),
+      })
+
+      if (!res.ok) {
+        const json = await res.json()
+        throw new Error(json.error || 'Error al marcar como pagado')
+      }
+
+      await load()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error desconocido')
+    }
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -128,7 +153,11 @@ export default function AdminBookingsPage() {
           <Button variant="outline" onClick={() => void load()} disabled={loading}>
             Recargar
           </Button>
-          <Button variant="ghost" onClick={clearFilters} disabled={loading && !statusFilter && !paymentFilter && !venueFilter && !search}>
+          <Button
+            variant="ghost"
+            onClick={clearFilters}
+            disabled={loading && !statusFilter && !paymentFilter && !venueFilter && !search}
+          >
             Limpiar filtros
           </Button>
         </div>
@@ -205,7 +234,11 @@ export default function AdminBookingsPage() {
         </CardContent>
       </Card>
 
-      {error && <div className="p-3 rounded-md border border-destructive text-destructive bg-destructive/10 text-sm">{error}</div>}
+      {error && (
+        <div className="p-3 rounded-md border border-destructive text-destructive bg-destructive/10 text-sm">
+          {error}
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -215,7 +248,9 @@ export default function AdminBookingsPage() {
           {loading ? (
             <div className="text-sm text-muted-foreground">Cargando reservas...</div>
           ) : bookings.length === 0 ? (
-            <div className="text-sm text-muted-foreground">No se encontraron reservas con los filtros seleccionados.</div>
+            <div className="text-sm text-muted-foreground">
+              No se encontraron reservas con los filtros seleccionados.
+            </div>
           ) : (
             <table className="w-full text-sm">
               <thead>
@@ -227,6 +262,7 @@ export default function AdminBookingsPage() {
                   <th className="py-2 pr-3">Estado</th>
                   <th className="py-2 pr-3">Pago</th>
                   <th className="py-2 pr-3 text-right">Monto</th>
+                  <th className="py-2 pr-3">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -237,28 +273,44 @@ export default function AdminBookingsPage() {
                     <tr
                       key={booking.id}
                       id={`booking-${booking.id}`}
-                      className={cn('border-b last:border-b-0 transition-colors', highlight && 'bg-primary/10 animate-pulse')}
+                      className={cn(
+                        'border-b last:border-b-0 transition-colors',
+                        highlight && 'bg-primary/10 animate-pulse'
+                      )}
                     >
                       <td className="py-3 pr-3 align-top">
                         <div className="font-semibold">
-                          <Link href={`/admin/bookings/${booking.id}`} className="underline decoration-dotted underline-offset-4">
+                          <Link
+                            href={`/admin/bookings/${booking.id}`}
+                            className="underline decoration-dotted underline-offset-4"
+                          >
                             {booking.bookingNumber}
                           </Link>
                         </div>
                         <div className="text-xs text-muted-foreground">ID: {booking.id}</div>
                       </td>
                       <td className="py-3 pr-3 align-top">
-                        <div className="font-medium">{booking.customer?.fullName || 'Sin nombre'}</div>
-                        <div className="text-xs text-muted-foreground">{booking.customer?.email || 'Sin email'}</div>
+                        <div className="font-medium">
+                          {booking.customer?.fullName || 'Sin nombre'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {booking.customer?.email || 'Sin email'}
+                        </div>
                       </td>
                       <td className="py-3 pr-3 align-top">
                         <div>{booking.venueName || 'Sede desconocida'}</div>
-                        <div className="text-xs text-muted-foreground">{booking.court?.name || 'Sin cancha'}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {booking.court?.name || 'Sin cancha'}
+                        </div>
                       </td>
                       <td className="py-3 pr-3 align-top">
                         <div>{new Date(booking.startDatetime).toLocaleString('es-AR')}</div>
                         <div className="text-xs text-muted-foreground">
-                          Fin: {new Date(booking.endDatetime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                          Fin:{' '}
+                          {new Date(booking.endDatetime).toLocaleTimeString('es-AR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </div>
                       </td>
                       <td className="py-3 pr-3 align-top">
@@ -269,17 +321,44 @@ export default function AdminBookingsPage() {
                         {latestPayment ? (
                           <div>
                             <div className="capitalize">{latestPayment.payment_status}</div>
-                            <div className="text-xs text-muted-foreground">{latestPayment.payment_method || 'Sin método'}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {latestPayment.payment_method || 'Sin método'}
+                            </div>
                           </div>
                         ) : (
                           <div className="text-xs text-muted-foreground">Sin pagos</div>
                         )}
                       </td>
                       <td className="py-3 pr-3 align-top text-right">
-                        <div className="font-semibold">${booking.finalAmount.toLocaleString('es-AR')}</div>
+                        <div className="font-semibold">
+                          ${booking.finalAmount.toLocaleString('es-AR')}
+                        </div>
                         {booking.totalAmount !== booking.finalAmount && (
-                          <div className="text-xs text-muted-foreground">Total: ${booking.totalAmount.toLocaleString('es-AR')}</div>
+                          <div className="text-xs text-muted-foreground">
+                            Total: ${booking.totalAmount.toLocaleString('es-AR')}
+                          </div>
                         )}
+                      </td>
+                      <td className="py-3 pr-3 align-top">
+                        {latestPayment?.payment_status === 'pending' &&
+                          latestPayment?.payment_method === 'cash' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => markAsPaid(booking.id)}
+                              className="gap-1 text-xs"
+                            >
+                              <CheckCircle2 className="h-3 w-3" />
+                              Marcar pagado
+                            </Button>
+                          )}
+                        {latestPayment?.payment_status === 'completed' &&
+                          latestPayment?.payment_method === 'cash' && (
+                            <div className="flex items-center gap-1 text-xs text-green-600">
+                              <Banknote className="h-3 w-3" />
+                              Pagado en efectivo
+                            </div>
+                          )}
                       </td>
                     </tr>
                   )

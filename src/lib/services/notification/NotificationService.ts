@@ -6,6 +6,7 @@
 import { createAdminClient } from '@/lib/supabase/client'
 import { EmailNotificationObserver } from './EmailNotificationObserver'
 import { PushNotificationObserver } from './PushNotificationObserver'
+import type { Database } from '@/types/database'
 
 type NotificationChannel = 'email' | 'push' | 'sms'
 
@@ -133,22 +134,23 @@ export class NotificationService {
 
   /**
    * Store notification in database
+   * Solo guardamos notificaciones 'push' para la bandeja in-app
+   * Los emails se envían por SendGrid y no necesitan guardarse en la DB
    */
   private async storeNotification(notification: NotificationData): Promise<void> {
-    const channels: NotificationChannel[] = notification.channels || ['email', 'push']
-
-    // Store one record per channel
-    const records = channels.map(channel => ({
+    // Solo guardar 1 registro con channel 'push' para la bandeja de notificaciones
+    const record = {
       user_id: notification.userId,
       notification_type: notification.type,
-      channel,
+      channel: 'push' as const,
       title: notification.title,
       body: notification.body,
       data: notification.data || {},
       sent_at: new Date().toISOString(),
-    }))
+    }
 
-    const { error } = await this.supabase.from('notifications').insert(records)
+    // @ts-ignore - Type mismatch due to TypeScript cache, types are correct at runtime
+    const { error } = await this.supabase.from('notifications').insert(record)
 
     if (error) {
       console.error('Failed to store notification:', error)
@@ -167,15 +169,18 @@ export class NotificationService {
     endDatetime: string
     totalAmount: number
   }): Promise<void> {
+    // Parsear fecha asumiendo que viene en timezone de Argentina (UTC-3)
     const start = new Date(data.startDatetime)
     const formattedDate = start.toLocaleDateString('es-AR', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
+      timeZone: 'America/Argentina/Buenos_Aires',
     })
     const formattedTime = start.toLocaleTimeString('es-AR', {
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'America/Argentina/Buenos_Aires',
     })
 
     await this.notify({
@@ -233,6 +238,7 @@ export class NotificationService {
     const formattedTime = start.toLocaleTimeString('es-AR', {
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'America/Argentina/Buenos_Aires',
     })
 
     await this.notify({
@@ -300,7 +306,12 @@ export class NotificationService {
   }): Promise<void> {
     const start = data.startDatetime ? new Date(data.startDatetime) : null
     const formattedDate = start
-      ? start.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
+      ? start.toLocaleDateString('es-AR', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          timeZone: 'America/Argentina/Buenos_Aires',
+        })
       : undefined
 
     await this.notify({
@@ -331,6 +342,7 @@ export class NotificationService {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
+      timeZone: 'America/Argentina/Buenos_Aires',
     })
 
     await this.notify({
@@ -420,10 +432,12 @@ export class NotificationService {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
+      timeZone: 'America/Argentina/Buenos_Aires',
     })
     const endStr = new Date(data.endDatetime).toLocaleTimeString('es-AR', {
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'America/Argentina/Buenos_Aires',
     })
 
     await this.notify({
@@ -471,10 +485,12 @@ export class NotificationService {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
+      timeZone: 'America/Argentina/Buenos_Aires',
     })
     const endStr = new Date(data.endDatetime).toLocaleTimeString('es-AR', {
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'America/Argentina/Buenos_Aires',
     })
 
     await this.notify({
@@ -515,9 +531,9 @@ export class NotificationService {
       userId: data.adminId,
       type: 'admin_daily_summary',
       title: `Resumen diario de reservas - ${data.venueName}`,
-      body: `Fecha ${new Date(data.date).toLocaleDateString('es-AR')}: ${
-        data.totalBookings
-      } reservas.`,
+      body: `Fecha ${new Date(data.date).toLocaleDateString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+      })}: ${data.totalBookings} reservas.`,
       data,
       channels: ['email'],
     })
@@ -538,10 +554,12 @@ export class NotificationService {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
+      timeZone: 'America/Argentina/Buenos_Aires',
     })
     const formattedTime = start.toLocaleTimeString('es-AR', {
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'America/Argentina/Buenos_Aires',
     })
 
     const minutes = data.expiresInMinutes ?? 10

@@ -160,7 +160,7 @@ export class BookingService {
       )
     }
 
-    // Send confirmation notification
+    // Send confirmation notification to user
     await notificationService.sendBookingConfirmation({
       userId: data.userId,
       bookingNumber: booking.booking_number,
@@ -171,8 +171,34 @@ export class BookingService {
       totalAmount: finalAmount,
     })
 
-    // TODO: En una sola sede, las notificaciones a admins se pueden manejar de forma diferente
-    // Por ahora, se omiten las notificaciones automáticas a venue_admins
+    // Send notification to all venue admins
+    const { data: admins } = await this.supabase
+      .from('profiles')
+      .select('id')
+      .in('role', ['venue_admin', 'super_admin'])
+      .eq('is_active', true)
+
+    if (admins && admins.length > 0) {
+      // Enviar notificación a cada admin
+      await Promise.allSettled(
+        admins.map(admin =>
+          notificationService.sendAdminBookingCreated({
+            adminId: admin.id,
+            bookingId: booking.id,
+            bookingNumber: booking.booking_number,
+            courtId: court.id,
+            courtName: court.name,
+            venueId: court.venue.id,
+            venueName: court.venue.name,
+            startDatetime: data.startDatetime,
+            endDatetime: data.endDatetime,
+            userId: data.userId,
+            status: booking.status,
+            finalAmount: finalAmount,
+          })
+        )
+      )
+    }
 
     return booking
   }

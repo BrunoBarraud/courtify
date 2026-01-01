@@ -4,7 +4,9 @@ import { createServerClient, createAdminClient } from '@/lib/supabase/client'
 
 async function requireSuperAdmin() {
   const supabase = createServerClient(() => cookies())
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return { supabase, session: null, isSuper: false }
   const { data: profile } = await supabase
     .from('profiles')
@@ -36,14 +38,49 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
 
   // Step 2: best-effort cleanup of related records (execute in parallel)
   const cleanupOps: Promise<void>[] = [
-    (async () => { try { await admin.from('profiles').delete().eq('id', targetUserId) } catch { /* noop */ } })(),
-    (async () => { try { await admin.from('venue_admins').delete().eq('user_id', targetUserId) } catch { /* noop */ } })(),
-    (async () => { try { await admin.from('waitlist').delete().eq('user_id', targetUserId) } catch { /* noop */ } })(),
-    (async () => { try { await admin.from('notification_preferences').delete().eq('user_id', targetUserId) } catch { /* noop */ } })(),
-    (async () => { try { await admin.from('notifications').delete().eq('user_id', targetUserId) } catch { /* noop */ } })(),
+    (async () => {
+      try {
+        await admin.from('profiles').delete().eq('id', targetUserId)
+      } catch {
+        /* noop */
+      }
+    })(),
+    (async () => {
+      try {
+        await admin.from('waitlist').delete().eq('user_id', targetUserId)
+      } catch {
+        /* noop */
+      }
+    })(),
+    (async () => {
+      try {
+        await admin.from('notification_preferences').delete().eq('user_id', targetUserId)
+      } catch {
+        /* noop */
+      }
+    })(),
+    (async () => {
+      try {
+        await admin.from('notifications').delete().eq('user_id', targetUserId)
+      } catch {
+        /* noop */
+      }
+    })(),
     // Optional domain tables (pueden no existir aún en el schema)
-    (async () => { try { await admin.from('user_subscriptions').delete().eq('user_id', targetUserId) } catch { /* noop */ } })(),
-    (async () => { try { await admin.from('promotion_usage').delete().eq('user_id', targetUserId) } catch { /* noop */ } })(),
+    (async () => {
+      try {
+        await admin.from('user_subscriptions').delete().eq('user_id', targetUserId)
+      } catch {
+        /* noop */
+      }
+    })(),
+    (async () => {
+      try {
+        await admin.from('promotion_usage').delete().eq('user_id', targetUserId)
+      } catch {
+        /* noop */
+      }
+    })(),
   ]
 
   const cleanupResults = await Promise.allSettled(cleanupOps)

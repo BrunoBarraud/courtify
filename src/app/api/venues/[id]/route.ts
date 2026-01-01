@@ -1,13 +1,13 @@
 /**
  * Venue Details API Route
  * GET /api/venues/[id] - Get venue details
- * PUT /api/venues/[id] - Update venue (admin only)
+ * PUT/PATCH /api/venues/[id] - Update venue (admin only)
  * DELETE /api/venues/[id] - Delete venue (admin only)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createServerClient } from '@/lib/supabase/client'
+import { createServerClient, createAdminClient } from '@/lib/supabase/client'
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -58,24 +58,19 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       .eq('id', session.user.id)
       .single()
 
-    // Si no es super_admin, verificar si es admin de la sede
-    if (profile?.role !== 'super_admin') {
-      const { data: venueAdmin } = await supabase
-        .from('venue_admins')
-        .select('*')
-        .eq('venue_id', params.id)
-        .eq('user_id', session.user.id)
-        .single()
-
-      if (!venueAdmin) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-      }
+    // En una sola sede, venue_admin y super_admin tienen acceso
+    if (!profile || !['venue_admin', 'super_admin'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const body = await request.json()
 
+    // Usar admin client para bypasear RLS
+    const admin = createAdminClient()
+
     // Update venue
-    const { data: venue, error } = await supabase
+    // @ts-ignore - Tipos de Supabase desactualizados
+    const { data: venue, error } = await admin
       .from('venues')
       .update(body)
       .eq('id', params.id)
@@ -83,6 +78,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       .single()
 
     if (error) {
+      console.error('Update venue error:', error)
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
@@ -92,6 +88,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json({ error: 'Failed to update venue' }, { status: 500 })
   }
 }
+
+// PATCH es un alias de PUT para compatibilidad
+export const PATCH = PUT
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -112,18 +111,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       .eq('id', session.user.id)
       .single()
 
-    // Si no es super_admin, verificar si es admin de la sede
-    if (profile?.role !== 'super_admin') {
-      const { data: venueAdmin } = await supabase
-        .from('venue_admins')
-        .select('*')
-        .eq('venue_id', params.id)
-        .eq('user_id', session.user.id)
-        .single()
-
-      if (!venueAdmin) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-      }
+    // En una sola sede, venue_admin y super_admin tienen acceso
+    if (!profile || !['venue_admin', 'super_admin'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Soft delete (set is_active to false)

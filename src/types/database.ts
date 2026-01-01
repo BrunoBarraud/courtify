@@ -3,13 +3,7 @@
  * TypeScript types generated from Supabase schema
  */
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
   public: {
@@ -131,7 +125,15 @@ export interface Database {
           id: string
           venue_id: string
           name: string
-          court_type: 'tennis' | 'paddle' | 'football' | 'basketball' | 'volleyball' | 'multipurpose'
+          court_type:
+            | 'Fútbol 5'
+            | 'Fútbol 7'
+            | 'Fútbol 11'
+            | 'Tenis'
+            | 'Pádel'
+            | 'Básquet'
+            | 'Vóley'
+            | 'Multipropósito'
           description: string | null
           is_indoor: boolean
           has_lighting: boolean
@@ -150,7 +152,15 @@ export interface Database {
           id?: string
           venue_id: string
           name: string
-          court_type: 'tennis' | 'paddle' | 'football' | 'basketball' | 'volleyball' | 'multipurpose'
+          court_type:
+            | 'Fútbol 5'
+            | 'Fútbol 7'
+            | 'Fútbol 11'
+            | 'Tenis'
+            | 'Pádel'
+            | 'Básquet'
+            | 'Vóley'
+            | 'Multipropósito'
           description?: string | null
           is_indoor?: boolean
           has_lighting?: boolean
@@ -169,7 +179,15 @@ export interface Database {
           id?: string
           venue_id?: string
           name?: string
-          court_type?: 'tennis' | 'paddle' | 'football' | 'basketball' | 'volleyball' | 'multipurpose'
+          court_type?:
+            | 'Fútbol 5'
+            | 'Fútbol 7'
+            | 'Fútbol 11'
+            | 'Tenis'
+            | 'Pádel'
+            | 'Básquet'
+            | 'Vóley'
+            | 'Multipropósito'
           description?: string | null
           is_indoor?: boolean
           has_lighting?: boolean
@@ -282,6 +300,159 @@ export interface Database {
           metadata: Json
           created_at: string
         }
+        Insert: {
+          id?: string
+          user_id: string
+          notification_type: string
+          channel: 'email' | 'push' | 'sms'
+          title: string
+          body: string
+          data?: Json
+          is_read?: boolean
+          read_at?: string | null
+          sent_at?: string | null
+          error_message?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          notification_type?: string
+          channel?: 'email' | 'push' | 'sms'
+          title?: string
+          body?: string
+          data?: Json
+          is_read?: boolean
+          read_at?: string | null
+          sent_at?: string | null
+          error_message?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+      }
+      booking_participants: {
+        Row: {
+          id: string
+          booking_id: string
+          name: string
+          email: string | null
+          phone: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id: string
+          name: string
+          email?: string | null
+          phone?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string
+          name?: string
+          email?: string | null
+          phone?: string | null
+          created_at?: string
+        }
+      }
+      waitlist: {
+        Row: {
+          id: string
+          court_id: string
+          user_id: string
+          preferred_date: string
+          preferred_start_time: string
+          preferred_end_time: string
+          status: 'active' | 'notified' | 'expired' | 'cancelled'
+          notified_at: string | null
+          expires_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          court_id: string
+          user_id: string
+          preferred_date: string
+          preferred_start_time: string
+          preferred_end_time: string
+          status?: 'active' | 'notified' | 'expired' | 'cancelled'
+          notified_at?: string | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          court_id?: string
+          user_id?: string
+          preferred_date?: string
+          preferred_start_time?: string
+          preferred_end_time?: string
+          status?: 'active' | 'notified' | 'expired' | 'cancelled'
+          notified_at?: string | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      promo_codes: {
+        Row: {
+          id: string
+          code: string
+          description: string | null
+          discount_type: 'percentage' | 'fixed'
+          discount_value: number
+          max_discount_amount: number | null
+          min_booking_amount: number | null
+          start_date: string
+          end_date: string
+          usage_limit: number | null
+          usage_count: number
+          is_active: boolean
+          applicable_court_types: Json
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          description?: string | null
+          discount_type: 'percentage' | 'fixed'
+          discount_value: number
+          max_discount_amount?: number | null
+          min_booking_amount?: number | null
+          start_date: string
+          end_date: string
+          usage_limit?: number | null
+          usage_count?: number
+          is_active?: boolean
+          applicable_court_types?: Json
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          description?: string | null
+          discount_type?: 'percentage' | 'fixed'
+          discount_value?: number
+          max_discount_amount?: number | null
+          min_booking_amount?: number | null
+          start_date?: string
+          end_date?: string
+          usage_limit?: number | null
+          usage_count?: number
+          is_active?: boolean
+          applicable_court_types?: Json
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
       }
     }
     Views: {
@@ -295,7 +466,15 @@ export interface Database {
       booking_status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show'
       payment_status: 'pending' | 'processing' | 'completed' | 'failed' | 'refunded'
       payment_method: 'stripe' | 'mercadopago' | 'cash' | 'transfer'
-      court_type: 'tennis' | 'paddle' | 'football' | 'basketball' | 'volleyball' | 'multipurpose'
+      court_type:
+        | 'Fútbol 5'
+        | 'Fútbol 7'
+        | 'Fútbol 11'
+        | 'Tenis'
+        | 'Pádel'
+        | 'Básquet'
+        | 'Vóley'
+        | 'Multipropósito'
     }
   }
 }

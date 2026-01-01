@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@/lib/supabase/client'
 
-async function assertVenueAdmin(supabase: ReturnType<typeof createServerClient>, userId: string, courtId: string) {
+async function assertVenueAdmin(
+  supabase: ReturnType<typeof createServerClient>,
+  userId: string,
+  courtId: string
+) {
   const { data: court } = await supabase
     .from('courts')
     .select('venue_id')
@@ -10,28 +14,13 @@ async function assertVenueAdmin(supabase: ReturnType<typeof createServerClient>,
     .single()
   if (!court) return false
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .single()
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', userId).single()
 
-  if (profile?.role === 'super_admin') return true
-
-  const { data: admin } = await supabase
-    .from('venue_admins')
-    .select('id')
-    .eq('venue_id', court.venue_id)
-    .eq('user_id', userId)
-    .single()
-
-  return !!admin
+  // En una sola sede, super_admin y venue_admin tienen acceso
+  return profile?.role === 'super_admin' || profile?.role === 'venue_admin'
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = createServerClient(() => cookies())
     const { data, error } = await supabase
@@ -48,13 +37,12 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = createServerClient(() => cookies())
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Check admin rights for court's venue
@@ -71,14 +59,8 @@ export async function DELETE(
       .eq('id', user.id)
       .single()
 
-    if (profile?.role !== 'super_admin') {
-      const { data: admin } = await supabase
-        .from('venue_admins')
-        .select('id')
-        .eq('venue_id', court.venue_id)
-        .eq('user_id', user.id)
-        .single()
-      if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (profile?.role !== 'super_admin' && profile?.role !== 'venue_admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -98,13 +80,12 @@ export async function DELETE(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const supabase = createServerClient(() => cookies())
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const isAdmin = await assertVenueAdmin(supabase, user.id, params.id)
@@ -122,7 +103,10 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid datetime' }, { status: 400 })
     }
     if (endD <= startD) {
-      return NextResponse.json({ error: 'end_datetime must be greater than start_datetime' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'end_datetime must be greater than start_datetime' },
+        { status: 400 }
+      )
     }
 
     // Prevent overlap with existing blocked periods for this court
@@ -131,9 +115,14 @@ export async function POST(
       .select('id, start_datetime, end_datetime')
       .eq('court_id', params.id)
     if (ovErr) return NextResponse.json({ error: ovErr.message }, { status: 400 })
-    const overlaps = (existing || []).some(bp => new Date(bp.start_datetime) < endD && new Date(bp.end_datetime) > startD)
+    const overlaps = (existing || []).some(
+      bp => new Date(bp.start_datetime) < endD && new Date(bp.end_datetime) > startD
+    )
     if (overlaps) {
-      return NextResponse.json({ error: 'Blocked period overlaps with an existing one' }, { status: 409 })
+      return NextResponse.json(
+        { error: 'Blocked period overlaps with an existing one' },
+        { status: 409 }
+      )
     }
 
     const payload = {
