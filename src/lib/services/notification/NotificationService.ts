@@ -6,7 +6,6 @@
 import { createAdminClient } from '@/lib/supabase/client'
 import { EmailNotificationObserver } from './EmailNotificationObserver'
 import { PushNotificationObserver } from './PushNotificationObserver'
-import type { Database } from '@/types/database'
 
 type NotificationChannel = 'email' | 'push' | 'sms'
 
@@ -149,7 +148,6 @@ export class NotificationService {
       sent_at: new Date().toISOString(),
     }
 
-    // @ts-ignore - Type mismatch due to TypeScript cache, types are correct at runtime
     const { error } = await this.supabase.from('notifications').insert(record)
 
     if (error) {

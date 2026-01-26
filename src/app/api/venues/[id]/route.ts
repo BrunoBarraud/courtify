@@ -69,7 +69,6 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const admin = createAdminClient()
 
     // Update venue
-    // @ts-ignore - Tipos de Supabase desactualizados
     const { data: venue, error } = await admin
       .from('venues')
       .update(body)

@@ -75,11 +75,14 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     const body = await request.json()
 
+    const { member_price, non_member_price, allowed_player_counts, pricing_mode, ...courtPatch } =
+      body || {}
+
     // Create court using admin client to avoid RLS issues
     const { data: court, error } = await admin
       .from('courts')
       .insert({
-        ...body,
+        ...courtPatch,
         venue_id: params.id,
       })
       .select()
@@ -87,6 +90,23 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    const mp = member_price != null ? Number(member_price) : null
+    const nmp = non_member_price != null ? Number(non_member_price) : null
+    if (mp != null && nmp != null) {
+      const apc = Array.isArray(allowed_player_counts) ? allowed_player_counts : []
+      const { error: prError } = await (admin as any).from('pricing_rules').upsert({
+        court_id: court.id,
+        pricing_mode: String(pricing_mode ?? 'per_person'),
+        member_price: mp,
+        non_member_price: nmp,
+        allowed_player_counts: apc,
+      })
+
+      if (prError) {
+        return NextResponse.json({ error: prError.message }, { status: 400 })
+      }
     }
 
     return NextResponse.json({ court }, { status: 201 })

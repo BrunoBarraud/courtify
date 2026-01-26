@@ -366,6 +366,7 @@ export interface Database {
           external_payment_data: Json
           receipt_url: string | null
           invoice_url: string | null
+          paid_at: string | null
           refund_amount: number
           refunded_at: string | null
           metadata: Json
@@ -386,6 +387,7 @@ export interface Database {
           external_payment_data?: Json
           receipt_url?: string | null
           invoice_url?: string | null
+          paid_at?: string | null
           refund_amount?: number
           refunded_at?: string | null
           metadata?: Json
@@ -406,6 +408,7 @@ export interface Database {
           external_payment_data?: Json
           receipt_url?: string | null
           invoice_url?: string | null
+          paid_at?: string | null
           refund_amount?: number
           refunded_at?: string | null
           metadata?: Json
