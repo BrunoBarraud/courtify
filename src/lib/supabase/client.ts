@@ -8,21 +8,13 @@ import {
   createServerComponentClient,
 } from '@supabase/auth-helpers-nextjs'
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/database'
 
 /**
  * Browser client for use in Client Components
  */
 export const createBrowserClient = () => {
-  return createClientComponentClient<Database>({
-    options: {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
-        flowType: 'pkce',
-      },
-    },
+  return createClientComponentClient<any>({
+    options: {},
   })
 }
 
@@ -30,8 +22,10 @@ export const createBrowserClient = () => {
  * Server client for use in Server Components and API routes
  * Expects a function that returns the cookies store: () => cookies()
  */
-export const createServerClient = (getCookies: () => any) => {
-  return createServerComponentClient<Database>({
+export const createServerClient = (
+  getCookies: () => ReturnType<(typeof import('next/headers'))['cookies']>
+) => {
+  return createServerComponentClient<any>({
     cookies: getCookies,
   })
 }
@@ -47,7 +41,7 @@ export const createAdminClient = () => {
     throw new Error('Missing Supabase environment variables')
   }
 
-  return createClient<Database>(supabaseUrl, supabaseServiceKey, {
+  return createClient<any>(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,

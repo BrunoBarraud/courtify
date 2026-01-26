@@ -38,8 +38,8 @@ export default function UserPermissionsPage({ params }: { params: { id: string }
       if (venueAdmins) {
         const formattedVenues = venueAdmins
           .map(va => ({
-            id: va.venue?.id || '',
-            name: va.venue?.name || '',
+            id: va.venue?.[0]?.id || '',
+            name: va.venue?.[0]?.name || '',
             permissions: va.permissions || DEFAULT_VENUE_ADMIN_PERMISSIONS,
           }))
           .filter(v => v.id !== '')
