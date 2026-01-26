@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CheckCircle2, Banknote, CreditCard, Wallet } from 'lucide-react'
+import { CheckCircle2, Banknote, Wallet } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,18 @@ export default function NewBookingPage() {
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  type CourtLite = { id: string; name: string; court_type: string; is_indoor: boolean }
+  type CourtLite = {
+    id: string
+    name: string
+    court_type: string
+    is_indoor: boolean
+    pricing_rules?: Array<{
+      pricing_mode: string
+      member_price: number
+      non_member_price: number
+      allowed_player_counts?: unknown
+    }> | null
+  }
   const [courts, setCourts] = useState<CourtLite[]>([])
   const [loadingCourts, setLoadingCourts] = useState(false)
   const [date, setDate] = useState<string>('')
@@ -38,6 +49,13 @@ export default function NewBookingPage() {
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null)
   const [showCashDialog, setShowCashDialog] = useState(false)
+
+  const [playerCount, setPlayerCount] = useState(2)
+  const [participants, setParticipants] = useState<
+    Array<{ name: string; isMember: boolean; memberNumber: string }>
+  >([])
+
+  const selectedCourt = courts.find(c => c.id === courtId) || null
 
   useEffect(() => {
     // Prefill date with today by default
@@ -115,11 +133,39 @@ export default function NewBookingPage() {
     fetchAvailability()
   }, [courtId, date])
 
+  useEffect(() => {
+    // Ajustar cantidad por defecto según tipo
+    if (selectedCourt?.court_type === 'Pádel') {
+      if (![2, 4].includes(playerCount)) setPlayerCount(4)
+      return
+    }
+    if (playerCount < 1) setPlayerCount(1)
+  }, [selectedCourt?.court_type])
+
+  useEffect(() => {
+    setParticipants(prev => {
+      const next = [...prev]
+      while (next.length < playerCount) {
+        next.push({ name: '', isMember: false, memberNumber: '' })
+      }
+      while (next.length > playerCount) next.pop()
+      return next
+    })
+  }, [playerCount])
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
     try {
+      const cleanedParticipants = participants
+        .map(p => ({
+          name: p.name.trim(),
+          isMember: p.isMember,
+          memberNumber: p.memberNumber.trim() || undefined,
+        }))
+        .filter(p => p.name)
+
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -128,6 +174,7 @@ export default function NewBookingPage() {
           startDatetime: new Date(startDatetime).toISOString(),
           endDatetime: new Date(endDatetime).toISOString(),
           notes: notes || undefined,
+          participants: cleanedParticipants.length > 0 ? cleanedParticipants : undefined,
         }),
       })
       const data = await res.json()
@@ -165,6 +212,101 @@ export default function NewBookingPage() {
                 {error}
               </div>
             )}
+
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Participantes</Label>
+
+              {selectedCourt?.court_type === 'Pádel' ? (
+                <div className="grid gap-2">
+                  <Label htmlFor="playerCount" className="text-sm text-muted-foreground">
+                    Cantidad de jugadores
+                  </Label>
+                  <select
+                    id="playerCount"
+                    className="w-full rounded-md border-2 border-input bg-background px-3 py-2.5 text-sm"
+                    value={playerCount}
+                    onChange={e => setPlayerCount(Number(e.target.value))}
+                    disabled={loading}
+                  >
+                    <option value={2}>2</option>
+                    <option value={4}>4</option>
+                  </select>
+                </div>
+              ) : (
+                <div className="grid gap-2">
+                  <Label htmlFor="playerCount" className="text-sm text-muted-foreground">
+                    Cantidad de jugadores
+                  </Label>
+                  <Input
+                    id="playerCount"
+                    type="number"
+                    min={1}
+                    value={playerCount}
+                    onChange={e => setPlayerCount(Math.max(1, Number(e.target.value || 1)))}
+                    disabled={loading}
+                    className="border-2"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {participants.map((p, idx) => (
+                  <div key={idx} className="rounded-md border p-3 space-y-3">
+                    <div className="space-y-1">
+                      <Label className="text-sm">Jugador {idx + 1}</Label>
+                      <Input
+                        value={p.name}
+                        onChange={e =>
+                          setParticipants(prev => {
+                            const next = [...prev]
+                            next[idx] = { ...next[idx], name: e.target.value }
+                            return next
+                          })
+                        }
+                        placeholder="Nombre y apellido"
+                        className="border-2"
+                        disabled={loading}
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={p.isMember}
+                        onChange={e =>
+                          setParticipants(prev => {
+                            const next = [...prev]
+                            next[idx] = { ...next[idx], isMember: e.target.checked }
+                            return next
+                          })
+                        }
+                        disabled={loading}
+                      />
+                      <Label className="text-sm">Es socio</Label>
+                    </div>
+
+                    {p.isMember && (
+                      <div className="space-y-1">
+                        <Label className="text-sm">Número de socio</Label>
+                        <Input
+                          value={p.memberNumber}
+                          onChange={e =>
+                            setParticipants(prev => {
+                              const next = [...prev]
+                              next[idx] = { ...next[idx], memberNumber: e.target.value }
+                              return next
+                            })
+                          }
+                          placeholder="Ej: 123"
+                          className="border-2"
+                          disabled={loading}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="courtSelect" className="text-base font-semibold">
@@ -297,7 +439,7 @@ export default function NewBookingPage() {
                     Elegí un método de pago para confirmar
                   </p>
                 </div>
-                <div className="grid gap-3 md:grid-cols-3">
+                <div className="grid gap-3 md:grid-cols-2">
                   <Button
                     type="button"
                     onClick={() =>
@@ -310,16 +452,6 @@ export default function NewBookingPage() {
                   >
                     <Wallet className="h-4 w-4" />
                     Mercado Pago
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => router.push(`/payments/checkout?bookingId=${createdBookingId}`)}
-                    className="flex-1 gap-2"
-                    size="lg"
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    Stripe
                   </Button>
                   <Button
                     type="button"
@@ -392,8 +524,18 @@ export default function NewBookingPage() {
                   </Button>
                   <Button
                     onClick={() => {
-                      setShowCashDialog(false)
-                      router.push('/bookings')
+                      const run = async () => {
+                        if (!createdBookingId) return
+                        try {
+                          await fetch(`/api/bookings/${createdBookingId}/cash`, {
+                            method: 'POST',
+                          })
+                        } finally {
+                          setShowCashDialog(false)
+                          router.push('/bookings')
+                        }
+                      }
+                      void run()
                     }}
                     className="flex-1"
                   >

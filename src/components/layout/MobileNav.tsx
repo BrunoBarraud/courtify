@@ -17,7 +17,9 @@ export default function MobileNav() {
     let mounted = true
     const load = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
         if (!mounted) return
         setUserId(user?.id ?? null)
 
@@ -48,26 +50,38 @@ export default function MobileNav() {
     }
     load()
     const { data: sub } = supabase.auth.onAuthStateChange(() => load())
-    return () => { mounted = false; sub.subscription.unsubscribe() }
+    return () => {
+      mounted = false
+      sub.subscription.unsubscribe()
+    }
   }, [supabase])
 
   const items = [
-    { href: '/dashboard', label: 'Inicio', icon: Home },
-    { href: '/bookings', label: 'Reservas', icon: Calendar },
-    { href: '/venues', label: 'Canchas', icon: MapPin },
-    { href: '/payments', label: 'Pagos', icon: CreditCard },
-    ...(isAdmin ? ([{ href: '/admin/users', label: 'Admin', icon: Shield }] as const) : ([] as const)),
-    userId
-      ? { href: '/perfil', label: 'Perfil', icon: User }
-      : { href: '/auth/signin', label: 'Ingresar', icon: User },
+    ...(userId
+      ? ([
+          { href: '/dashboard', label: 'Inicio', icon: Home },
+          { href: '/bookings', label: 'Reservas', icon: Calendar },
+          { href: '/venues', label: 'Canchas', icon: MapPin },
+          { href: '/payments', label: 'Pagos', icon: CreditCard },
+          ...(isAdmin
+            ? ([{ href: '/admin/users', label: 'Admin', icon: Shield }] as const)
+            : ([] as const)),
+          { href: '/perfil', label: 'Perfil', icon: User },
+        ] as const)
+      : ([
+          { href: '/auth/signin', label: 'Ingresar', icon: User },
+          { href: '/auth/signup', label: 'Registrate', icon: User },
+        ] as const)),
   ] as const
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 w-full z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <ul className={[
-        'grid pb-[env(safe-area-inset-bottom)]',
-        isAdmin ? 'grid-cols-6' : 'grid-cols-5',
-      ].join(' ')}>
+      <ul
+        className={[
+          'grid pb-[env(safe-area-inset-bottom)]',
+          userId ? (isAdmin ? 'grid-cols-6' : 'grid-cols-5') : 'grid-cols-2',
+        ].join(' ')}
+      >
         {items.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           return (

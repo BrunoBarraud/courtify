@@ -7,12 +7,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@/lib/supabase/client'
 import { paymentService } from '@/lib/services/payment/PaymentService'
-import { StripePaymentStrategy } from '@/lib/services/payment/StripePaymentStrategy'
 import { MercadoPagoPaymentStrategy } from '@/lib/services/payment/MercadoPagoPaymentStrategy'
 import { notificationService } from '@/lib/services/notification/NotificationService'
 
 // Register payment strategies
-paymentService.registerStrategy('stripe', new StripePaymentStrategy())
 paymentService.registerStrategy('mercadopago', new MercadoPagoPaymentStrategy())
 
 export async function POST(request: NextRequest) {
@@ -40,7 +38,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!['stripe', 'mercadopago'].includes(paymentMethod)) {
+    if (!['mercadopago'].includes(paymentMethod)) {
       return NextResponse.json({ error: 'Invalid payment method' }, { status: 400 })
     }
 

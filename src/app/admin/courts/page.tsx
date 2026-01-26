@@ -25,6 +25,12 @@ type Court = {
   is_active: boolean
   display_order: number
   image_url?: string
+  pricing_rules?: Array<{
+    pricing_mode: string
+    member_price: number
+    non_member_price: number
+    allowed_player_counts?: unknown
+  }> | null
 }
 
 export default function AdminCourtsPage() {
@@ -42,7 +48,8 @@ export default function AdminCourtsPage() {
   const [name, setName] = useState('')
   const [courtType, setCourtType] = useState('Fútbol 5')
   const [isIndoor, setIsIndoor] = useState(false)
-  const [hourlyRate, setHourlyRate] = useState('')
+  const [memberPrice, setMemberPrice] = useState('')
+  const [nonMemberPrice, setNonMemberPrice] = useState('')
   const [isActive, setIsActive] = useState(true)
   const [imageUrl, setImageUrl] = useState('')
 
@@ -82,7 +89,8 @@ export default function AdminCourtsPage() {
     setName('')
     setCourtType('Fútbol 5')
     setIsIndoor(false)
-    setHourlyRate('')
+    setMemberPrice('')
+    setNonMemberPrice('')
     setIsActive(true)
     setImageUrl('')
     setShowDialog(true)
@@ -93,14 +101,16 @@ export default function AdminCourtsPage() {
     setName(court.name)
     setCourtType(court.court_type)
     setIsIndoor(court.is_indoor)
-    setHourlyRate(court.hourly_rate.toString())
+    const pr = court.pricing_rules?.[0]
+    setMemberPrice(pr?.member_price != null ? String(pr.member_price) : '')
+    setNonMemberPrice(pr?.non_member_price != null ? String(pr.non_member_price) : '')
     setIsActive(court.is_active)
     setImageUrl(court.image_url || '')
     setShowDialog(true)
   }
 
   const handleSave = async () => {
-    if (!name.trim() || !hourlyRate) {
+    if (!name.trim() || !memberPrice || !nonMemberPrice) {
       alert('Completá todos los campos requeridos')
       return
     }
@@ -109,13 +119,19 @@ export default function AdminCourtsPage() {
     setError(null)
 
     try {
+      const allowed_player_counts = courtType === 'Pádel' ? [2, 4] : []
       const payload = {
         name: name.trim(),
         court_type: courtType,
         is_indoor: isIndoor,
-        hourly_rate: parseFloat(hourlyRate),
+        // Compatibilidad: el schema actual requiere hourly_rate
+        hourly_rate: parseFloat(nonMemberPrice || '0'),
         is_active: isActive,
-        image_url: imageUrl || null,
+        images: imageUrl ? [imageUrl] : undefined,
+        pricing_mode: 'per_person',
+        member_price: parseFloat(memberPrice || '0'),
+        non_member_price: parseFloat(nonMemberPrice || '0'),
+        allowed_player_counts,
       }
 
       if (editingCourt) {
@@ -223,8 +239,15 @@ export default function AdminCourtsPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Precio por hora</span>
-                  <span className="font-bold text-2xl text-primary">${court.hourly_rate}</span>
+                  <span className="text-sm text-muted-foreground">Precio por persona</span>
+                  <div className="text-right">
+                    <div className="font-bold text-xl text-primary">
+                      ${court.pricing_rules?.[0]?.non_member_price ?? court.hourly_rate}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Socio: ${court.pricing_rules?.[0]?.member_price ?? court.hourly_rate}
+                    </div>
+                  </div>
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button
@@ -294,7 +317,7 @@ export default function AdminCourtsPage() {
                 <option value="Fútbol 7">Fútbol 7</option>
                 <option value="Fútbol 11">Fútbol 11</option>
                 <option value="Tenis">Tenis</option>
-                <option value="Paddle">Paddle</option>
+                <option value="Pádel">Pádel</option>
                 <option value="Básquet">Básquet</option>
                 <option value="Vóley">Vóley</option>
                 <option value="Otro">Otro</option>
@@ -302,15 +325,29 @@ export default function AdminCourtsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="hourlyRate">Precio por hora *</Label>
+              <Label htmlFor="memberPrice">Precio socio (por persona) *</Label>
               <Input
-                id="hourlyRate"
+                id="memberPrice"
                 type="number"
                 step="0.01"
                 min="0"
-                value={hourlyRate}
-                onChange={e => setHourlyRate(e.target.value)}
-                placeholder="Ej: 5000"
+                value={memberPrice}
+                onChange={e => setMemberPrice(e.target.value)}
+                placeholder="Ej: 4000"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="nonMemberPrice">Precio no socio (por persona) *</Label>
+              <Input
+                id="nonMemberPrice"
+                type="number"
+                step="0.01"
+                min="0"
+                value={nonMemberPrice}
+                onChange={e => setNonMemberPrice(e.target.value)}
+                placeholder="Ej: 6000"
                 required
               />
             </div>

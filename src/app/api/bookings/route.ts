@@ -14,20 +14,22 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createServerClient(() => cookies())
     const admin = createAdminClient()
-    
+
     // Check authentication
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
-    
+
     // Validate input
     const validatedData = createBookingSchema.parse(body)
 
     // Ensure profile exists to satisfy FK (bookings.user_id -> profiles.id)
-    const { data: existingProfile } = await admin
+    const { data: existingProfile } = await (admin as any)
       .from('profiles')
       .select('id')
       .eq('id', session.user.id)
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
       if (!userEmail) {
         return NextResponse.json({ error: 'User email not found' }, { status: 400 })
       }
-      await admin
+      await (admin as any)
         .from('profiles')
         .insert({ id: session.user.id, email: userEmail })
         .throwOnError()
@@ -52,31 +54,27 @@ export async function POST(request: NextRequest) {
       userId: session.user.id,
     })
 
-    const checkoutUrl = `/payments/checkout?bookingId=${booking.id}`
+    const checkoutUrl = `/payments/start?bookingId=${booking.id}&method=mercadopago`
     return NextResponse.json({ booking, checkoutUrl }, { status: 201 })
   } catch (error) {
     console.error('Booking creation error:', error)
-    
+
     if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    return NextResponse.json(
-      { error: 'Failed to create booking' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 })
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = createServerClient(() => cookies())
-    
+
     // Check authentication
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -91,9 +89,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ bookings })
   } catch (error) {
     console.error('Failed to fetch bookings:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch bookings' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 })
   }
 }

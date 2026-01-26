@@ -53,6 +53,13 @@ export default async function VenueDetailPage({ params }: Props) {
     hourly_rate: number
   }
 
+  const getPlayersLabel = (courtType: string) => {
+    if (courtType === 'Fútbol 5') return '5 vs 5'
+    if (courtType === 'Fútbol 7') return '7 vs 7'
+    if (courtType === 'Fútbol 11') return '11 vs 11'
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-background pb-12">
       {/* --- ESTRUCTURA TIPO FACEBOOK --- */}
@@ -205,7 +212,7 @@ export default async function VenueDetailPage({ params }: Props) {
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <Users className="h-4 w-4" />
-                        {c.court_type.includes('5') ? '5 vs 5' : '7 vs 7'}
+                        {getPlayersLabel(c.court_type) ?? ''}
                       </div>
                       <div className="text-lg font-bold text-primary">
                         ${c.hourly_rate}{' '}

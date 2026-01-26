@@ -8,17 +8,21 @@ import { redirect } from 'next/navigation'
 
 export default async function MyBookingsPage() {
   const supabase = createServerClient(() => cookies())
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   if (!session) {
     redirect('/auth/signin')
   }
 
   const { data: bookings } = await supabase
     .from('bookings')
-    .select(`
+    .select(
+      `
       *,
       court:courts(*, venue:venues(*))
-    `)
+    `
+    )
     .eq('user_id', session.user.id)
     .order('start_datetime', { ascending: false })
 
@@ -37,7 +41,9 @@ export default async function MyBookingsPage() {
               {bookings.map((b: any) => (
                 <div key={b.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="min-w-0 flex-1">
-                    <div className="font-semibold truncate">{b.court?.name} • {b.court?.venue?.name}</div>
+                    <div className="font-semibold truncate">
+                      {b.court?.name} • {b.court?.venue?.name}
+                    </div>
                     <div className="text-sm text-muted-foreground">
                       {formatDateTimeAR(b.start_datetime)} — {formatDateTimeAR(b.end_datetime)}
                     </div>
@@ -46,13 +52,14 @@ export default async function MyBookingsPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{formatCurrencyARS(b.final_amount)}</span>
                     <Link href={`/bookings/${b.id}`}>
-                      <Button size="sm" variant="outline">Ver</Button>
-                    </Link>
-                    <Link href={`/payments/checkout?bookingId=${b.id}`}>
-                      <Button size="sm" disabled={b.status === 'confirmed'}>Pagar Stripe</Button>
+                      <Button size="sm" variant="outline">
+                        Ver
+                      </Button>
                     </Link>
                     <Link href={`/payments/start?bookingId=${b.id}&method=mercadopago`}>
-                      <Button size="sm" variant="secondary" disabled={b.status === 'confirmed'}>Pagar MP</Button>
+                      <Button size="sm" variant="secondary" disabled={b.status === 'confirmed'}>
+                        Pagar MP
+                      </Button>
                     </Link>
                   </div>
                 </div>

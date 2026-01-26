@@ -340,18 +340,19 @@ export default function AdminBookingsPage() {
                         )}
                       </td>
                       <td className="py-3 pr-3 align-top">
-                        {latestPayment?.payment_status === 'pending' &&
-                          latestPayment?.payment_method === 'cash' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => markAsPaid(booking.id)}
-                              className="gap-1 text-xs"
-                            >
-                              <CheckCircle2 className="h-3 w-3" />
-                              Marcar pagado
-                            </Button>
-                          )}
+                        {(latestPayment?.payment_status === 'pending' &&
+                          latestPayment?.payment_method === 'cash') ||
+                        (!latestPayment && booking.status === 'pending') ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => markAsPaid(booking.id)}
+                            className="gap-1 text-xs"
+                          >
+                            <CheckCircle2 className="h-3 w-3" />
+                            Marcar pagado
+                          </Button>
+                        ) : null}
                         {latestPayment?.payment_status === 'completed' &&
                           latestPayment?.payment_method === 'cash' && (
                             <div className="flex items-center gap-1 text-xs text-green-600">

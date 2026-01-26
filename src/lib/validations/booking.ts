@@ -5,24 +5,29 @@
 
 import { z } from 'zod'
 
-export const createBookingSchema = z.object({
-  courtId: z.string().uuid('Invalid court ID'),
-  startDatetime: z.string().datetime('Invalid start datetime'),
-  endDatetime: z.string().datetime('Invalid end datetime'),
-  participants: z.array(z.object({
-    name: z.string().min(1, 'Name is required'),
-    email: z.string().email('Invalid email').optional(),
-    phone: z.string().optional(),
-  })).optional(),
-  notes: z.string().max(500, 'Notes too long').optional(),
-  promotionCode: z.string().optional(),
-}).refine(
-  (data) => new Date(data.endDatetime) > new Date(data.startDatetime),
-  {
+export const createBookingSchema = z
+  .object({
+    courtId: z.string().uuid('Invalid court ID'),
+    startDatetime: z.string().datetime('Invalid start datetime'),
+    endDatetime: z.string().datetime('Invalid end datetime'),
+    participants: z
+      .array(
+        z.object({
+          name: z.string().min(1, 'Name is required'),
+          email: z.string().email('Invalid email').optional(),
+          phone: z.string().optional(),
+          isMember: z.boolean().optional(),
+          memberNumber: z.string().optional(),
+        })
+      )
+      .optional(),
+    notes: z.string().max(500, 'Notes too long').optional(),
+    promotionCode: z.string().optional(),
+  })
+  .refine(data => new Date(data.endDatetime) > new Date(data.startDatetime), {
     message: 'End time must be after start time',
     path: ['endDatetime'],
-  }
-)
+  })
 
 export const updateBookingSchema = z.object({
   startDatetime: z.string().datetime().optional(),

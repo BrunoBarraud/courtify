@@ -8,7 +8,27 @@ import { notificationService } from './notification/NotificationService'
 import { calculateDurationHours } from '@/lib/utils'
 
 export class BookingService {
-  private supabase = createAdminClient()
+  private supabase = createAdminClient() as any
+
+  private getSlotConfig(courtType: string | null | undefined) {
+    if (courtType === 'Pádel') {
+      return {
+        slotMinutes: 90,
+        defaultStartHour: 13,
+        defaultStartMinute: 0,
+        defaultEndHour: 23,
+        defaultEndMinute: 30,
+      }
+    }
+
+    return {
+      slotMinutes: 60,
+      defaultStartHour: 8,
+      defaultStartMinute: 0,
+      defaultEndHour: 22,
+      defaultEndMinute: 0,
+    }
+  }
 
   /**
    * Check court availability for a specific date
@@ -64,12 +84,14 @@ export class BookingService {
       .lte('end_datetime', endOfDay.toISOString())
 
     // Generate time slots
+    const slotConfig = this.getSlotConfig((court as { court_type?: string } | null)?.court_type)
     const slots = this.generateTimeSlots(
       rules || [],
       bookings || [],
       blockedPeriods || [],
       date,
-      court.hourly_rate
+      court.hourly_rate,
+      slotConfig
     )
 
     return {
@@ -86,7 +108,13 @@ export class BookingService {
     userId: string
     startDatetime: string
     endDatetime: string
-    participants?: Array<{ name: string; email?: string; phone?: string }>
+    participants?: Array<{
+      name: string
+      email?: string
+      phone?: string
+      isMember?: boolean
+      memberNumber?: string
+    }>
     notes?: string
     promotionCode?: string
   }) {
@@ -112,8 +140,69 @@ export class BookingService {
       throw new Error('Court not found')
     }
 
-    const duration = calculateDurationHours(data.startDatetime, data.endDatetime)
-    const totalAmount = court.hourly_rate * duration
+    const { data: pricingRule } = await this.supabase
+      .from('pricing_rules')
+      .select('pricing_mode, member_price, non_member_price, allowed_player_counts')
+      .eq('court_id', data.courtId)
+      .maybeSingle()
+
+    let totalAmount = 0
+    const participants = data.participants ?? []
+
+    if (
+      pricingRule &&
+      String((pricingRule as { pricing_mode?: string } | null)?.pricing_mode) === 'per_person'
+    ) {
+      if (participants.length === 0) {
+        throw new Error('Debe cargar los participantes para calcular el precio')
+      }
+
+      for (const p of participants) {
+        const isMember = Boolean(p.isMember)
+        if (!isMember) {
+          totalAmount += Number((pricingRule as any).non_member_price)
+          continue
+        }
+
+        const memberNumber = String(p.memberNumber ?? '').trim()
+        if (!memberNumber) {
+          throw new Error('Falta número de socio en un participante')
+        }
+
+        const { data: member } = await this.supabase
+          .from('club_members')
+          .select('id, is_active, status, profile_id')
+          .eq('member_number', memberNumber)
+          .single()
+
+        const typedMember = member as {
+          id: string
+          is_active?: boolean
+          status?: string
+          profile_id: string | null
+        } | null
+
+        if (!typedMember) {
+          throw new Error(`Número de socio no encontrado: ${memberNumber}`)
+        }
+
+        const active = typedMember.is_active ?? typedMember.status === 'active'
+        if (!active) {
+          throw new Error(`Socio inactivo: ${memberNumber}`)
+        }
+
+        // Estricto: solo se considera socio si el número ya fue reclamado por una cuenta
+        if (!typedMember.profile_id) {
+          throw new Error(`El número de socio ${memberNumber} aún no está asociado a una cuenta`)
+        }
+
+        totalAmount += Number((pricingRule as any).member_price)
+      }
+    } else {
+      // Fallback legacy: hourly_rate * duración
+      const duration = calculateDurationHours(data.startDatetime, data.endDatetime)
+      totalAmount = court.hourly_rate * duration
+    }
     let discountAmount = 0
 
     // Apply promotion if provided
@@ -151,13 +240,76 @@ export class BookingService {
     }
 
     // Add participants if provided
-    if (data.participants && data.participants.length > 0) {
-      await this.supabase.from('booking_participants').insert(
-        data.participants.map(p => ({
-          booking_id: booking.id,
-          ...p,
-        }))
-      )
+    if (participants.length > 0) {
+      if (pricingRule && String((pricingRule as any)?.pricing_mode) === 'per_person') {
+        const rows = [] as Array<Record<string, unknown>>
+
+        for (const p of participants) {
+          const isMember = Boolean(p.isMember)
+          let memberId: string | null = null
+          let memberNumber: string | null = null
+          const priceApplied = isMember
+            ? Number((pricingRule as any).member_price)
+            : Number((pricingRule as any).non_member_price)
+
+          if (isMember) {
+            memberNumber = String(p.memberNumber ?? '').trim() || null
+            if (!memberNumber) {
+              throw new Error('Falta número de socio en un participante')
+            }
+
+            const { data: member } = await this.supabase
+              .from('club_members')
+              .select('id, is_active, status, profile_id')
+              .eq('member_number', memberNumber)
+              .single()
+
+            const typedMember = member as {
+              id: string
+              is_active?: boolean
+              status?: string
+              profile_id: string | null
+            } | null
+
+            if (!typedMember) {
+              throw new Error(`Número de socio no encontrado: ${memberNumber}`)
+            }
+            const active = typedMember.is_active ?? typedMember.status === 'active'
+            if (!active) {
+              throw new Error(`Socio inactivo: ${memberNumber}`)
+            }
+            if (!typedMember.profile_id) {
+              throw new Error(
+                `El número de socio ${memberNumber} aún no está asociado a una cuenta`
+              )
+            }
+
+            memberId = typedMember.id
+          }
+
+          rows.push({
+            booking_id: booking.id,
+            name: p.name,
+            email: p.email,
+            phone: p.phone,
+            is_member: isMember,
+            member_number: memberNumber,
+            member_id: memberId,
+            price_applied: priceApplied,
+          })
+        }
+
+        await this.supabase.from('booking_participants').insert(rows)
+      } else {
+        await this.supabase.from('booking_participants').insert(
+          participants.map(p => ({
+            booking_id: booking.id,
+            name: p.name,
+            email: p.email,
+            phone: p.phone,
+          }))
+        )
+      }
     }
 
     // Send confirmation notification to user
@@ -181,7 +333,7 @@ export class BookingService {
     if (admins && admins.length > 0) {
       // Enviar notificación a cada admin
       await Promise.allSettled(
-        admins.map(admin =>
+        admins.map((admin: { id: string }) =>
           notificationService.sendAdminBookingCreated({
             adminId: admin.id,
             bookingId: booking.id,
@@ -400,7 +552,14 @@ export class BookingService {
     bookings: Array<{ start_datetime: string; end_datetime: string }>,
     blockedPeriods: Array<{ start_datetime: string; end_datetime: string }>,
     date: string,
-    basePrice: number
+    basePrice: number,
+    slotConfig: {
+      slotMinutes: number
+      defaultStartHour: number
+      defaultStartMinute: number
+      defaultEndHour: number
+      defaultEndMinute: number
+    }
   ) {
     const slots: Array<{ start: string; end: string; available: boolean; price: number }> = []
 
@@ -426,7 +585,7 @@ export class BookingService {
       d.getDate() === now.getDate()
 
     if (rules && rules.length > 0) {
-      // Build slots based on rules windows (hourly steps)
+      // Build slots based on rules windows (slotMinutes steps)
       for (const r of rules) {
         if (r.is_available === false) continue
         // Parse times "HH:MM"
@@ -444,11 +603,17 @@ export class BookingService {
         // Safeguard
         if (endWin <= startWin) continue
 
-        // Generate hourly slots inside window
+        // Generate slots inside window
         const price = r.price_override ?? basePrice
-        for (let t = new Date(startWin); t < endWin; t = new Date(t.getTime() + 60 * 60 * 1000)) {
+        for (
+          let t = new Date(startWin);
+          t < endWin;
+          t = new Date(t.getTime() + slotConfig.slotMinutes * 60 * 1000)
+        ) {
           const slotStart = new Date(t)
-          const slotEnd = new Date(Math.min(endWin.getTime(), slotStart.getTime() + 60 * 60 * 1000))
+          const slotEnd = new Date(
+            Math.min(endWin.getTime(), slotStart.getTime() + slotConfig.slotMinutes * 60 * 1000)
+          )
           if (slotEnd <= slotStart) continue
           // Skip past slots if the date is today
           if (sameDate(slotStart) && slotEnd <= now) continue
@@ -456,14 +621,24 @@ export class BookingService {
         }
       }
     } else {
-      // Default to 08:00–22:00 when no rules
-      for (let hour = 8; hour < 22; hour++) {
-        const start = new Date(date)
-        start.setHours(hour, 0, 0, 0)
-        const end = new Date(date)
-        end.setHours(hour + 1, 0, 0, 0)
-        if (sameDate(start) && end <= now) continue
-        pushSlot(start, end, basePrice)
+      // Default window when no rules
+      const startWin = new Date(date)
+      startWin.setHours(slotConfig.defaultStartHour, slotConfig.defaultStartMinute, 0, 0)
+      const endWin = new Date(date)
+      endWin.setHours(slotConfig.defaultEndHour, slotConfig.defaultEndMinute, 0, 0)
+
+      for (
+        let t = new Date(startWin);
+        t < endWin;
+        t = new Date(t.getTime() + slotConfig.slotMinutes * 60 * 1000)
+      ) {
+        const slotStart = new Date(t)
+        const slotEnd = new Date(
+          Math.min(endWin.getTime(), slotStart.getTime() + slotConfig.slotMinutes * 60 * 1000)
+        )
+        if (slotEnd <= slotStart) continue
+        if (sameDate(slotStart) && slotEnd <= now) continue
+        pushSlot(slotStart, slotEnd, basePrice)
       }
     }
 
@@ -484,14 +659,16 @@ export class BookingService {
       .from('courts')
       .select('name, venue:venues(name)')
       .eq('id', courtId)
-      .single<{ name: string; venue: { name: string }[] }>()
+      .single()
+
+    const typedCourt = court as { name: string; venue: { name: string }[] } | null
 
     // Notify relevant users
     for (const entry of waitlistUsers || []) {
       // Simple notification - in production, check time overlap
-      if (court) {
-        const courtName = court.name
-        const venueName = court.venue[0]?.name ?? ''
+      if (typedCourt) {
+        const courtName = typedCourt.name
+        const venueName = typedCourt.venue[0]?.name ?? ''
 
         await notificationService.sendWaitlistSlotAvailable({
           userId: entry.user_id,

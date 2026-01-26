@@ -79,7 +79,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Métricas */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
           <Card className="border-2 hover:border-primary/50 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Reservas activas</CardTitle>
@@ -111,19 +111,6 @@ export default async function DashboardPage() {
               <CardTitle className="text-sm font-medium">Abonos</CardTitle>
               <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
                 <CreditCard className="h-5 w-5 text-green-500" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground mt-1">Próximamente</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Torneos</CardTitle>
-              <div className="h-10 w-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                <Trophy className="h-5 w-5 text-orange-500" />
               </div>
             </CardHeader>
             <CardContent>
@@ -181,7 +168,7 @@ export default async function DashboardPage() {
                           </Button>
                         </Link>
                         {booking.status !== 'confirmed' && (
-                          <Link href={`/payments/checkout?bookingId=${booking.id}`}>
+                          <Link href={`/payments/start?bookingId=${booking.id}&method=mercadopago`}>
                             <Button size="sm">Pagar</Button>
                           </Link>
                         )}
@@ -235,29 +222,14 @@ export default async function DashboardPage() {
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
                 <Calendar className="h-6 w-6 text-primary" />
               </div>
-              <CardTitle className="text-lg">Ver canchas</CardTitle>
-              <CardDescription>Encontrá y reservá tu próxima cancha</CardDescription>
+              <CardTitle className="text-lg">Ver Club</CardTitle>
+              <CardDescription>
+                Consultá las canchas disponibles, ubicación y toda la info de nuestro club
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/venues">
-                <Button className="w-full">Explorar sedes</Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardHeader>
-              <div className="h-12 w-12 rounded-lg bg-orange-500/10 flex items-center justify-center mb-3">
-                <Trophy className="h-6 w-6 text-orange-500" />
-              </div>
-              <CardTitle className="text-lg">Torneos</CardTitle>
-              <CardDescription>Competí en próximos torneos</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/tournaments">
-                <Button className="w-full" variant="outline">
-                  Ver torneos
-                </Button>
+                <Button className="w-full">Ver club</Button>
               </Link>
             </CardContent>
           </Card>

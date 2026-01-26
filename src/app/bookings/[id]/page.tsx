@@ -60,9 +60,6 @@ export default async function BookingDetailPage({ params }: { params: { id: stri
             <div>
               <h3 className="font-semibold mb-2">Acciones</h3>
               <div className="flex flex-wrap gap-2">
-                <Link href={`/payments/checkout?bookingId=${booking.id}`}>
-                  <Button disabled={isConfirmed}>Pagar Stripe</Button>
-                </Link>
                 <Link href={`/payments/start?bookingId=${booking.id}&method=mercadopago`}>
                   <Button variant="secondary" disabled={isConfirmed}>
                     Pagar MP

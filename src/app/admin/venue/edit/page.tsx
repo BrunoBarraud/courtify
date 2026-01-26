@@ -196,7 +196,7 @@ export default function EditVenuePage() {
                   value={name}
                   onChange={e => setName(e.target.value)}
                   required
-                  placeholder="Ej: Complejo Deportivo Teniente Origone"
+                  placeholder="Ej: ComplejoApp"
                 />
               </div>
               <div className="space-y-2">

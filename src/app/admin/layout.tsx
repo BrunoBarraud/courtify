@@ -33,6 +33,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link className="px-3 py-2 rounded hover:bg-muted" href="/admin/courts">
             Canchas
           </Link>
+          <Link className="px-3 py-2 rounded hover:bg-muted" href="/admin/members">
+            Socios
+          </Link>
           <Link className="px-3 py-2 rounded hover:bg-muted" href="/admin/users">
             Usuarios
           </Link>

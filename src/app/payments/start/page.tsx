@@ -23,7 +23,7 @@ export default function PaymentStartPage() {
         setLoading(false)
         return
       }
-      if (!['mercadopago', 'stripe'].includes(method)) {
+      if (!['mercadopago'].includes(method)) {
         setError('Método de pago inválido')
         setLoading(false)
         return
@@ -46,24 +46,14 @@ export default function PaymentStartPage() {
           return
         }
 
-        if (method === 'mercadopago') {
-          if (!data.checkoutUrl) {
-            setError('No se recibió la URL de Mercado Pago')
-            setLoading(false)
-            return
-          }
-          window.location.href = data.checkoutUrl
+        if (!data.checkoutUrl) {
+          setError('No se recibió la URL de Mercado Pago')
+          setLoading(false)
           return
         }
-
-        // Stripe → redirigir a nuestro checkout con clientSecret asociado al booking
-        router.replace(
-          `/payments/checkout?${
-            bookingId ? `bookingId=${bookingId}` : `subscriptionId=${subscriptionId}`
-          }`
-        )
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
+        window.location.href = data.checkoutUrl
+        return
+      } catch {
         setError('Error al iniciar el pago')
         setLoading(false)
       }
