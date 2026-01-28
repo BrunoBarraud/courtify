@@ -59,8 +59,9 @@ export async function middleware(req: NextRequest) {
   // Redirigir a dashboard si está autenticado y en ruta de autenticación
   const authRoutes = ['/auth/signin', '/auth/signup']
   const isAuthRoute = authRoutes.includes(req.nextUrl.pathname)
+  const forceAuthRoute = req.nextUrl.searchParams.get('force') === '1'
 
-  if (session && isAuthRoute) {
+  if (session && isAuthRoute && !forceAuthRoute) {
     return redirectWithCookies(new URL('/dashboard', req.url))
   }
 

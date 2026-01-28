@@ -5,11 +5,19 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { cookies } from 'next/headers'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar, CreditCard, Bell, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { createServerClient } from '@/lib/supabase/client'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = createServerClient(() => cookies())
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const isAuthed = !!session
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Hero Section */}
@@ -29,19 +37,35 @@ export default function HomePage() {
               <br />
               <span className="font-semibold text-foreground">Simple, rápido y seguro.</span>
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
-              <Link href="/auth/signup">
-                <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
-                  Registrate ahora
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/auth/signin">
-                <Button size="lg" variant="outline" className="gap-2">
-                  Iniciar sesión
-                </Button>
-              </Link>
-            </div>
+            {isAuthed ? (
+              <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
+                <Link href="/bookings/new">
+                  <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
+                    Nueva reserva
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/dashboard">
+                  <Button size="lg" variant="outline" className="gap-2">
+                    Ir al dashboard
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
+                <Link href="/auth/signup">
+                  <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
+                    Registrate ahora
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/auth/signin">
+                  <Button size="lg" variant="outline" className="gap-2">
+                    Iniciar sesión
+                  </Button>
+                </Link>
+              </div>
+            )}
             <div className="flex flex-wrap justify-center gap-6 mt-8 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-primary" />
