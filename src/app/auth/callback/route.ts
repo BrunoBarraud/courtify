@@ -17,6 +17,14 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('[Auth Callback] Error exchanging code:', error)
+      if (
+        (typeof (error as unknown as { status?: unknown }).status === 'number' &&
+          (error as unknown as { status?: number }).status === 429) ||
+        (typeof (error as unknown as { code?: unknown }).code === 'string' &&
+          (error as unknown as { code?: string }).code === 'over_request_rate_limit')
+      ) {
+        return NextResponse.redirect(`${origin}/auth/signin?error=rate_limited`)
+      }
       return NextResponse.redirect(`${origin}/auth/signin?error=auth_callback_error`)
     }
 

@@ -12,9 +12,8 @@ import type { Database } from '@/types/database'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'MatchUp - Sports Court Booking Platform',
-  description:
-    'Book sports courts online with ease. Manage bookings, subscriptions, and tournaments.',
+  title: 'ComplejoApp',
+  description: 'Reservá Tu Cancha',
 }
 
 export const viewport: Viewport = {

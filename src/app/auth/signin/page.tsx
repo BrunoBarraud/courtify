@@ -69,8 +69,8 @@ export default function SignInPage() {
         const errorMessage = error.message.includes('Invalid login credentials')
           ? 'Credenciales inválidas. Verifica tu email y contraseña.'
           : error.message.includes('Email not confirmed')
-          ? 'Por favor, verifica tu correo electrónico antes de iniciar sesión.'
-          : 'Ocurrió un error al iniciar sesión. Intenta nuevamente.'
+            ? 'Por favor, verifica tu correo electrónico antes de iniciar sesión.'
+            : 'Ocurrió un error al iniciar sesión. Intenta nuevamente.'
 
         toast.error('Error de autenticación', {
           description: errorMessage,
@@ -107,6 +107,24 @@ export default function SignInPage() {
       return () => clearTimeout(timer)
     }
   }, [isRedirecting])
+
+  useEffect(() => {
+    const err = searchParams.get('error')
+    if (!err) return
+
+    if (err === 'rate_limited') {
+      toast.error('Demasiados intentos seguidos', {
+        description: 'Esperá un minuto y volvé a intentar iniciar sesión.',
+      })
+      return
+    }
+
+    if (err === 'auth_callback_error') {
+      toast.error('Error al iniciar sesión', {
+        description: 'No se pudo completar el inicio de sesión. Intentá nuevamente.',
+      })
+    }
+  }, [searchParams])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:px-6 lg:px-8">

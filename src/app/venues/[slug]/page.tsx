@@ -66,10 +66,14 @@ export default async function VenueDetailPage({ params }: Props) {
       <div className="bg-background mb-8 shadow-sm">
         {/* 1. LA FOTO DE PORTADA (Banner) */}
         {/* Ya no tiene texto encima, así que no necesita un overlay oscuro fuerte */}
-        <div className="relative h-[300px] md:h-[400px] w-full bg-slate-200">
+        <div className="relative h-[220px] md:h-[400px] w-full bg-slate-200">
           {venue.cover_image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={venue.cover_image_url} alt="Portada" className="h-full w-full object-cover" />
+            <img
+              src={venue.cover_image_url}
+              alt="Portada"
+              className="h-full w-full object-contain md:object-cover bg-black"
+            />
           ) : (
             <div className="h-full w-full flex items-center justify-center bg-gradient-to-r from-slate-300 to-slate-400">
               <MapPin className="h-20 w-20 text-slate-500/50" />
@@ -102,17 +106,11 @@ export default async function VenueDetailPage({ params }: Props) {
 
             {/* B. LA INFORMACIÓN Y ACCIONES */}
             {/* Texto oscuro sobre fondo blanco */}
-            <div className="flex-1 pt-2 md:pt-6 text-center md:text-left truncate w-full">
+            <div className="flex-1 pt-2 md:pt-6 text-center md:text-left w-full">
               {/* Título y Ubicación */}
-              <h1 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mb-2 truncate">
+              <h1 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mb-2 line-clamp-2 md:line-clamp-1">
                 {venue.name}
               </h1>
-              <div className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground mb-6">
-                <MapPin className="h-4 w-4" />
-                <p className="text-sm md:text-base font-medium truncate">
-                  {venue.address}, {venue.city}
-                </p>
-              </div>
 
               {/* C. BARRA DE ACCIONES (Botones tipo FB) */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4">

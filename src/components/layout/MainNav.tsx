@@ -120,7 +120,7 @@ const MainNav = () => {
               <UserMenu />
             </>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2">
               <Link href="/auth/signin">
                 <Button variant="outline">Iniciar sesión</Button>
               </Link>

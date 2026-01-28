@@ -38,7 +38,7 @@ export default function HomePage() {
               </Link>
               <Link href="/auth/signin">
                 <Button size="lg" variant="outline" className="gap-2">
-                  Ya tengo cuenta
+                  Iniciar sesión
                 </Button>
               </Link>
             </div>

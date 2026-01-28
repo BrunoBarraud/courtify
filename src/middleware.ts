@@ -6,6 +6,15 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req, res })
 
+  const redirectWithCookies = (to: URL) => {
+    const redirectRes = NextResponse.redirect(to)
+    const setCookie = res.headers.get('set-cookie')
+    if (setCookie) {
+      redirectRes.headers.set('set-cookie', setCookie)
+    }
+    return redirectRes
+  }
+
   // Refrescar la sesión si está expirada
   const {
     data: { session },
@@ -29,7 +38,7 @@ export async function middleware(req: NextRequest) {
       const redirectUrl = req.nextUrl.clone()
       redirectUrl.pathname = '/auth/signin'
       redirectUrl.searchParams.set('redirectedFrom', req.nextUrl.pathname)
-      return NextResponse.redirect(redirectUrl)
+      return redirectWithCookies(redirectUrl)
     }
 
     // Verificar rol admin para rutas admin
@@ -42,7 +51,7 @@ export async function middleware(req: NextRequest) {
 
       const isAdmin = profile?.role === 'venue_admin' || profile?.role === 'super_admin'
       if (!isAdmin) {
-        return NextResponse.redirect(new URL('/', req.url))
+        return redirectWithCookies(new URL('/', req.url))
       }
     }
   }
@@ -52,12 +61,12 @@ export async function middleware(req: NextRequest) {
   const isAuthRoute = authRoutes.includes(req.nextUrl.pathname)
 
   if (session && isAuthRoute) {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+    return redirectWithCookies(new URL('/dashboard', req.url))
   }
 
   return res
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/auth).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/auth|auth/callback).*)'],
 }
