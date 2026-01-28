@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Home, Calendar, Users, BarChart } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useUser } from '@supabase/auth-helpers-react'
 const NotificationsBell = dynamic(() => import('@/components/realtime/NotificationsBell'), {
   ssr: false,
 })
@@ -18,30 +17,8 @@ const UserMenu = dynamic(() => import('@/components/auth/UserMenu'), { ssr: fals
 
 const MainNav = () => {
   const pathname = usePathname()
-  const supabase = createClientComponentClient()
-  const [isAuthed, setIsAuthed] = useState<boolean>(false)
-
-  useEffect(() => {
-    let mounted = true
-    const load = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-        if (!mounted) return
-        setIsAuthed(!!user)
-      } catch {
-        if (!mounted) return
-        setIsAuthed(false)
-      }
-    }
-    load()
-    const { data: sub } = supabase.auth.onAuthStateChange(() => load())
-    return () => {
-      mounted = false
-      sub.subscription.unsubscribe()
-    }
-  }, [supabase])
+  const user = useUser()
+  const isAuthed = !!user
 
   const navItems = [
     {
