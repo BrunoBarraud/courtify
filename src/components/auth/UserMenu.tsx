@@ -109,7 +109,8 @@ export default function UserMenu() {
       setUser(null)
       setRole(null)
       toast.success('Sesión cerrada correctamente')
-      router.push('/auth/signin')
+      router.replace('/')
+      router.refresh()
     } catch (error) {
       console.error('Error al cerrar sesión:', error)
       toast.error('Ocurrió un error al cerrar sesión')
