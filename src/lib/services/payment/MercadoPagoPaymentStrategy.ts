@@ -13,15 +13,15 @@ import {
 export class MercadoPagoPaymentStrategy implements PaymentStrategy {
   constructor() {}
 
-  private getClient(): MercadoPagoConfig | null {
-    const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN
+  private getClient(config?: Record<string, any>): MercadoPagoConfig | null {
+    const accessToken = config?.accessToken || process.env.MERCADOPAGO_ACCESS_TOKEN
     if (!accessToken) return null
     return new MercadoPagoConfig({ accessToken })
   }
 
-  async createPayment(data: PaymentData): Promise<PaymentResult> {
+  async createPayment(data: PaymentData, config?: Record<string, any>): Promise<PaymentResult> {
     try {
-      const client = this.getClient()
+      const client = this.getClient(config)
       if (!client) {
         return {
           success: false,
@@ -80,9 +80,9 @@ export class MercadoPagoPaymentStrategy implements PaymentStrategy {
     }
   }
 
-  async confirmPayment(paymentId: string): Promise<PaymentResult> {
+  async confirmPayment(paymentId: string, config?: Record<string, any>): Promise<PaymentResult> {
     try {
-      const client = this.getClient()
+      const client = this.getClient(config)
       if (!client) return { success: false, status: 'failed', error: 'MercadoPago is not configured.' }
       const paymentApi = new MPPayment(client)
       const payment = await paymentApi.get({ id: paymentId })
@@ -103,9 +103,9 @@ export class MercadoPagoPaymentStrategy implements PaymentStrategy {
     }
   }
 
-  async refundPayment(paymentId: string, amount?: number): Promise<PaymentResult> {
+  async refundPayment(paymentId: string, amount?: number, config?: Record<string, any>): Promise<PaymentResult> {
     try {
-      const client = this.getClient()
+      const client = this.getClient(config)
       if (!client) return { success: false, status: 'failed', error: 'MercadoPago is not configured.' }
       const mod: any = await import('mercadopago')
       const refundApi = new mod.Refund(client as any)
@@ -127,9 +127,9 @@ export class MercadoPagoPaymentStrategy implements PaymentStrategy {
     }
   }
 
-  async getPaymentStatus(paymentId: string): Promise<PaymentStatus> {
+  async getPaymentStatus(paymentId: string, config?: Record<string, any>): Promise<PaymentStatus> {
     try {
-      const client = this.getClient()
+      const client = this.getClient(config)
       if (!client) return 'failed'
       const paymentApi = new MPPayment(client)
       const payment = await paymentApi.get({ id: paymentId })

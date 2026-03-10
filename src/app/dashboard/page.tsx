@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Calendar, Clock, CreditCard, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrencyARS, formatDateTimeAR } from '@/lib/i18n/format'
+import { isAdmin } from '@/lib/auth/roles'
 
 export default async function DashboardPage() {
   const supabase = createServerClient(() => cookies())
@@ -58,119 +59,128 @@ export default async function DashboardPage() {
     .gte('start_datetime', new Date().toISOString())
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="flex-1 container py-8">
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-muted/30">
+      <main className="flex-1 container py-8 max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         {/* Bienvenida */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
-              <h1 className="text-3xl font-bold mb-2">
-                ¡Hola, {profile?.full_name?.split(' ')[0] || 'Usuario'}! 👋
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 text-foreground">
+                ¡Hola, {profile?.full_name?.split(' ')[0] || 'Jugador'}! 👋
               </h1>
-              <p className="text-muted-foreground">Esto es lo que está pasando con tus reservas</p>
+              <p className="text-muted-foreground text-lg">Resumen de tu actividad en CanchaLibreApp.</p>
             </div>
-            <Link href="/bookings/new">
-              <Button size="lg" className="gap-2">
-                <Calendar className="h-4 w-4" />
+            <Button asChild size="lg" className="w-full md:w-auto gap-2 shadow-lg shadow-primary/20 hover:scale-105 transition-transform duration-200">
+              <Link href="/venues" className="w-full md:w-auto">
+                <Calendar className="h-5 w-5" />
                 Nueva reserva
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
 
         {/* Métricas */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <Card className="border-2 border-primary/20 hover:border-primary transition-colors overflow-hidden group relative shadow-sm">
+            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
               <CardTitle className="text-sm font-medium">Reservas activas</CardTitle>
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
                 <Calendar className="h-5 w-5 text-primary" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{activeBookings || 0}</div>
-              <p className="text-xs text-muted-foreground mt-1">Próximas confirmadas</p>
+            <CardContent className="relative z-10">
+              <div className="text-4xl font-black tracking-tight">{activeBookings || 0}</div>
+              <p className="text-sm text-muted-foreground mt-1 font-medium">Próximas a jugar</p>
             </CardContent>
           </Card>
 
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total reservas</CardTitle>
-              <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+          <Card className="border border-border/60 hover:border-blue-500/50 transition-colors overflow-hidden group relative shadow-sm">
+            <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+              <CardTitle className="text-sm font-medium">Total histórico</CardTitle>
+              <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
                 <Clock className="h-5 w-5 text-blue-500" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{totalBookings || 0}</div>
-              <p className="text-xs text-muted-foreground mt-1">Historial completo</p>
+            <CardContent className="relative z-10">
+              <div className="text-4xl font-black tracking-tight">{totalBookings || 0}</div>
+              <p className="text-sm text-muted-foreground mt-1 font-medium">Desde que te uniste</p>
             </CardContent>
           </Card>
 
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Abonos</CardTitle>
-              <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+          <Card className="border border-border/60 hover:border-green-500/50 transition-colors overflow-hidden group relative shadow-sm">
+            <div className="absolute inset-0 bg-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+              <CardTitle className="text-sm font-medium">Estado de Socio</CardTitle>
+              <div className="h-10 w-10 rounded-xl bg-green-500/10 flex items-center justify-center border border-green-500/20">
                 <CreditCard className="h-5 w-5 text-green-500" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground mt-1">Próximamente</p>
+            <CardContent className="relative z-10">
+              <div className="text-xl font-bold mt-2 text-foreground">Básico</div>
+              <p className="text-sm text-muted-foreground mt-1 font-medium">Mejorar plan</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Próximas reservas */}
-        <Card className="border-2">
-          <CardHeader>
-            <div className="flex items-center justify-between">
+        <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
+        <Card className="border border-border/60 shadow-md overflow-hidden bg-card/50 backdrop-blur-sm">
+          <CardHeader className="bg-muted/30 border-b pb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-2xl">Próximas reservas</CardTitle>
-                <CardDescription className="mt-1">
-                  Tus próximas reservas de cancha programadas
+                <CardTitle className="text-2xl font-bold">Próximas reservas</CardTitle>
+                <CardDescription className="text-base mt-2">
+                  Revisá tus turnos confirmados o pendientes de pago.
                 </CardDescription>
               </div>
-              <Link href="/bookings">
-                <Button variant="outline" size="sm">
-                  Ver todas
-                </Button>
-              </Link>
+              <Button asChild variant="outline" className="w-full sm:w-auto font-medium">
+                <Link href="/bookings">
+                  Ver historial completo
+                </Link>
+              </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {upcomingBookings && upcomingBookings.length > 0 ? (
-              <div className="space-y-3">
+              <div className="divide-y divide-border/60">
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {upcomingBookings.map((booking: any) => (
                   <div
-                    key={booking.id}
-                    className="flex items-center justify-between p-4 border-2 rounded-lg hover:border-primary/50 transition-colors bg-card"
+                    key={booking.id as string}
+                    className="flex flex-col md:flex-row md:items-center justify-between p-6 hover:bg-muted/40 transition-colors"
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-lg">{booking.court.name}</h3>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                          {booking.status}
+                    <div className="flex-1 mb-4 md:mb-0">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-bold text-lg">{booking.court.name}</h3>
+                        <span className={`text-xs px-2.5 py-1 rounded-md font-semibold ${booking.status === 'confirmed' ? 'bg-green-500/10 text-green-600' : 'bg-amber-500/10 text-amber-600'}`}>
+                          {booking.status === 'confirmed' ? 'Confirmado' : 'Pendiente Pago'}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground">{booking.court.venue.name}</p>
-                      <p className="text-sm mt-1 font-medium">
+                      <p className="text-sm text-muted-foreground font-medium flex items-center gap-2">
+                        {booking.court.venue.name}
+                      </p>
+                      <p className="text-base mt-2 font-bold text-foreground">
                         {formatDateTimeAR(booking.start_datetime)}
                       </p>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 ml-4">
-                      <span className="text-lg font-bold whitespace-nowrap">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                      <div className="bg-secondary/50 px-4 py-2 rounded-lg text-lg font-bold border border-border/50">
                         {formatCurrencyARS(booking.final_amount)}
-                      </span>
-                      <div className="flex gap-2">
-                        <Link href={`/bookings/${booking.id}`}>
-                          <Button size="sm" variant="outline">
-                            Ver
-                          </Button>
-                        </Link>
-                        {booking.status !== 'confirmed' && (
-                          <Link href={`/payments/start?bookingId=${booking.id}&method=mercadopago`}>
-                            <Button size="sm">Pagar</Button>
+                      </div>
+                      <div className="flex w-full sm:w-auto gap-2 mt-2 sm:mt-0">
+                        <Button asChild variant="outline" className="w-full">
+                          <Link href={`/bookings/${booking.id}`} className="flex-1 sm:flex-none">
+                            Detalles
                           </Link>
+                        </Button>
+                        {booking.status !== 'confirmed' && (
+                          <Button asChild className="w-full shadow-md shadow-primary/20">
+                            <Link href={`/payments/start?bookingId=${booking.id}&method=mercadopago`} className="flex-1 sm:flex-none">
+                              Abonar
+                            </Link>
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -178,59 +188,61 @@ export default async function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="py-12 text-center">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="h-8 w-8 text-primary" />
+              <div className="py-16 px-4 text-center flex flex-col items-center">
+                <div className="h-24 w-24 rounded-full bg-primary/5 flex items-center justify-center mb-6">
+                  <Calendar className="h-10 w-10 text-primary" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No tenés reservas próximas</h3>
-                <p className="text-muted-foreground mb-6">
-                  Reservá una cancha para empezar a jugar
+                <h3 className="text-2xl font-bold mb-3 tracking-tight">Cancha Libre</h3>
+                <p className="text-muted-foreground text-lg mb-8 max-w-sm">
+                  Actualmente no tenés ningún turno pendiente o futuro. ¿Sale un partido esta semana?
                 </p>
-                <Link href="/venues">
-                  <Button size="lg" className="gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Reservar una cancha
+                  <Button asChild size="lg" className="rounded-full px-8 py-6 text-base font-bold shadow-xl shadow-primary/20 hover:scale-105 transition-all">
+                    <Link href="/venues">
+                      Buscar Canchas y Horarios
+                    </Link>
                   </Button>
-                </Link>
               </div>
             )}
           </CardContent>
         </Card>
+        </div>
 
         {/* Acciones rápidas */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-8">
-          {profile && (profile as { role?: string }).role === 'super_admin' && (
-            <Card className="border-2 hover:border-primary/50 transition-colors">
+          {profile && isAdmin(profile.role) && (
+            <Card className="border border-border/50 hover:border-primary/50 transition-colors shadow-sm">
               <CardHeader>
-                <div className="h-12 w-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-3">
-                  <Trophy className="h-6 w-6 text-purple-500" />
+                <div className="h-12 w-12 rounded-lg bg-orange-500/10 flex items-center justify-center mb-3 border border-orange-500/20">
+                  <Trophy className="h-6 w-6 text-orange-500" />
                 </div>
-                <CardTitle className="text-lg">Panel de Admin</CardTitle>
-                <CardDescription>Gestioná usuarios y configuración</CardDescription>
+                <CardTitle className="text-lg">Panel de Administración</CardTitle>
+                <CardDescription>Gestioná tu sede, canchas y facturación.</CardDescription>
               </CardHeader>
               <CardContent>
-                <Link href="/admin/users">
-                  <Button className="w-full" variant="secondary">
-                    Ir a Administración
+                  <Button asChild className="w-full" variant="outline">
+                    <Link href="/admin">
+                      Ir a Administración
+                    </Link>
                   </Button>
-                </Link>
               </CardContent>
             </Card>
           )}
-          <Card className="border-2 hover:border-primary/50 transition-colors">
+          <Card className="border border-border/50 hover:border-primary/50 transition-colors shadow-sm">
             <CardHeader>
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3 border border-primary/20">
                 <Calendar className="h-6 w-6 text-primary" />
               </div>
-              <CardTitle className="text-lg">Ver Club</CardTitle>
+              <CardTitle className="text-lg">Ver Sedes</CardTitle>
               <CardDescription>
-                Consultá las canchas disponibles, ubicación y toda la info de nuestro club
+                Consultá las canchas disponibles, ubicación y toda la info de nuestras sedes
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Link href="/venues">
-                <Button className="w-full">Ver club</Button>
-              </Link>
+                <Button asChild className="w-full" variant="secondary">
+                  <Link href="/venues">
+                    Ver sedes
+                  </Link>
+                </Button>
             </CardContent>
           </Card>
         </div>

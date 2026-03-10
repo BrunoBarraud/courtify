@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { ImageUpload } from '@/components/admin/ImageUpload'
 import { Plus, Edit, Trash2, Save, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 type Court = {
   id: string
@@ -189,7 +190,7 @@ export default function AdminCourtsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Gestión de Canchas</h1>
@@ -221,8 +222,8 @@ export default function AdminCourtsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {courts.map(court => (
-            <Card key={court.id} className={!court.is_active ? 'opacity-60' : ''}>
-              <CardHeader>
+            <Card key={court.id} className={cn('border border-border/50 shadow-sm hover:shadow-md transition-shadow', !court.is_active && 'opacity-60')}>
+              <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-xl">{court.name}</CardTitle>

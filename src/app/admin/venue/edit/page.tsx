@@ -129,7 +129,7 @@ export default function EditVenuePage() {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div>
         <div className="text-muted-foreground">Cargando...</div>
       </div>
     )
@@ -137,7 +137,7 @@ export default function EditVenuePage() {
 
   if (error && !venue) {
     return (
-      <div className="p-6">
+      <div>
         <Card>
           <CardHeader>
             <CardTitle>Error</CardTitle>
@@ -154,7 +154,7 @@ export default function EditVenuePage() {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Editar Complejo</h1>

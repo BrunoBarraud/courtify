@@ -104,7 +104,7 @@ export default function AdminBookingDetailPage({ params }: Props) {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold">Detalle de reserva</h1>

@@ -4,7 +4,6 @@
  */
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { cookies } from 'next/headers'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -39,31 +38,31 @@ export default async function HomePage() {
             </p>
             {isAuthed ? (
               <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
-                <Link href="/bookings/new">
-                  <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
+                <Button asChild size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
+                  <Link href="/bookings/new">
                     Nueva reserva
                     <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="/dashboard">
-                  <Button size="lg" variant="outline" className="gap-2">
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="gap-2">
+                  <Link href="/dashboard">
                     Ir al dashboard
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             ) : (
               <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
-                <Link href="/auth/signup">
-                  <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
+                <Button asChild size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
+                  <Link href="/auth/signup">
                     Registrate ahora
                     <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="/auth/signin">
-                  <Button size="lg" variant="outline" className="gap-2">
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="gap-2">
+                  <Link href="/auth/signin">
                     Iniciar sesión
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             )}
             <div className="flex flex-wrap justify-center gap-6 mt-8 text-sm text-muted-foreground">
@@ -179,55 +178,57 @@ export default async function HomePage() {
       {/* Footer */}
       <footer className="border-t bg-muted/50">
         <div className="container py-12">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <div className="lg:col-span-2">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-12">
+            <div className="lg:col-span-4">
               <div className="flex items-center gap-3 mb-4">
-                <Image
-                  src="/logocomplejo.png"
-                  alt="Logo Complejo Deportivo"
-                  width={80}
-                  height={80}
-                />
+                <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-primary/10">
+                  <Calendar className="h-6 w-6 text-primary" />
+                </div>
                 <span className="flex items-baseline gap-1 leading-none">
                   <span className="text-[24px] font-extrabold tracking-tight leading-none">
-                    Complejo
+                    CanchaLibre
                   </span>
                   <span className="text-[18px] font-semibold italic text-primary leading-none">
                     App
                   </span>
                 </span>
               </div>
-              <h3 className="font-semibold mb-4">Contacto Club</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <span className="font-medium text-foreground">Instagram:</span>{' '}
-                  <a
-                    className="hover:underline"
-                    href="https://instagram.com/complejodeportivoposse"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    @complejodeportivoposse
-                  </a>
-                </li>
-                <li>
-                  <span className="font-medium text-foreground">Teléfono:</span> 3537-431400
-                </li>
+              <p className="text-sm text-muted-foreground mb-4 max-w-[300px]">
+                La plataforma integral de gestión y reservas para tu complejo deportivo. Digitalizá tu sede y aumentá tus ganancias hoy.
+              </p>
+            </div>
+            
+            <div className="lg:col-span-2">
+              <h3 className="font-semibold mb-4 text-foreground">Producto</h3>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><Link href="#" className="hover:text-primary transition-colors">Características</Link></li>
+                <li><Link href="#" className="hover:text-primary transition-colors">Solución Multi-Sede</Link></li>
+                <li><Link href="#" className="hover:text-primary transition-colors">Precios</Link></li>
+                <li><Link href="#" className="hover:text-primary transition-colors">Casos de Éxito</Link></li>
               </ul>
             </div>
-            <div>
-              <h3 className="font-semibold mb-4">Contacto Developer</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+
+            <div className="lg:col-span-3">
+              <h3 className="font-semibold mb-4 text-foreground">Recursos</h3>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><Link href="#" className="hover:text-primary transition-colors">Centro de Ayuda</Link></li>
+                <li><Link href="#" className="hover:text-primary transition-colors">Blog de Gestión</Link></li>
+                <li><Link href="#" className="hover:text-primary transition-colors">Guías para Administradores</Link></li>
+                <li><Link href="#" className="hover:text-primary transition-colors">API para Desarrolladores</Link></li>
+              </ul>
+            </div>
+
+            <div className="lg:col-span-3">
+              <h3 className="font-semibold mb-4 text-foreground">Contacto Comercial</h3>
+              <ul className="space-y-3 text-sm text-muted-foreground">
                 <li>
-                  <span className="font-medium text-foreground">Mail:</span>{' '}
-                  <a className="hover:underline" href="mailto:brunobarraud.contacto@gmail.com">
+                  <a className="hover:text-primary transition-colors" href="mailto:brunobarraud.contacto@gmail.com">
                     brunobarraud.contacto@gmail.com
                   </a>
                 </li>
                 <li>
-                  <span className="font-medium text-foreground">Instagram:</span>{' '}
                   <a
-                    className="hover:underline"
+                    className="hover:text-primary transition-colors"
                     href="https://instagram.com/brunoobarraud"
                     target="_blank"
                     rel="noreferrer"
@@ -236,21 +237,26 @@ export default async function HomePage() {
                   </a>
                 </li>
                 <li>
-                  <span className="font-medium text-foreground">Teléfono:</span> 3537-325109
+                  <span>+54 9 3537 325109</span>
                 </li>
               </ul>
             </div>
-            <div>
-              <h3 className="font-semibold mb-4">Desarrollo</h3>
-              <div className="text-sm text-muted-foreground space-y-2">
-                <div className="font-semibold text-foreground">Bruno Ariel Barraud</div>
-                <div>Ingeniero en Sistemas</div>
-                <div>FullStack Developer</div>
-              </div>
-            </div>
           </div>
-          <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} ComplejoApp. Todos los derechos reservados.
+          
+          <div className="mt-12 pt-8 border-t flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+            <div>
+              &copy; {new Date().getFullYear()} CanchaLibreApp. Todos los derechos reservados.
+            </div>
+            <div className="flex gap-6">
+              <Link href="#" className="hover:text-primary transition-colors">Términos de Servicio</Link>
+              <Link href="#" className="hover:text-primary transition-colors">Política de Privacidad</Link>
+            </div>
+            <div className="flex items-center gap-1">
+              <span>Desarrollado por</span>
+              <a href="https://instagram.com/brunoobarraud" target="_blank" rel="noreferrer" className="font-semibold text-foreground hover:text-primary transition-colors">
+                Bruno Barraud
+              </a>
+            </div>
           </div>
         </div>
       </footer>

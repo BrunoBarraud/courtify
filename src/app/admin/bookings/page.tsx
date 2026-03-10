@@ -146,7 +146,7 @@ export default function AdminBookingsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h1 className="text-2xl font-bold">Reservas de la sede</h1>
         <div className="flex items-center gap-2">
@@ -163,8 +163,8 @@ export default function AdminBookingsPage() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="border border-border/50 shadow-sm hover:shadow-md transition-shadow">
+        <CardHeader className="pb-3">
           <CardTitle>Filtros</CardTitle>
         </CardHeader>
         <CardContent>
@@ -240,8 +240,8 @@ export default function AdminBookingsPage() {
         </div>
       )}
 
-      <Card>
-        <CardHeader>
+      <Card className="border border-border/50 shadow-sm hover:shadow-md transition-shadow">
+        <CardHeader className="pb-3">
           <CardTitle>Reservas recientes</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">

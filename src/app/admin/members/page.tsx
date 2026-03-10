@@ -141,7 +141,7 @@ export default function AdminMembersPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h1 className="text-xl font-bold">Socios</h1>
         <div className="flex gap-2">

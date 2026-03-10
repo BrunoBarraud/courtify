@@ -7,8 +7,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+interface Venue {
+  id: string
+  name: string
+  address: string
+  city: string
+  country: string
+}
+
 export default function AdminVenuesPage() {
-  const [venues, setVenues] = useState<any[]>([])
+  const [venues, setVenues] = useState<Venue[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,7 +68,7 @@ export default function AdminVenuesPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Sedes</h1>
         <Button variant="outline" onClick={loadVenues} disabled={loading}>Recargar</Button>
@@ -68,8 +76,8 @@ export default function AdminVenuesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Nueva sede</CardTitle>
-          <CardDescription>Creá una nueva sede para gestionar canchas</CardDescription>
+          <CardTitle>Nueva Sede</CardTitle>
+          <CardDescription>Añadí una nueva sede a la red de tu club o complejo</CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
@@ -93,7 +101,9 @@ export default function AdminVenuesPage() {
               <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} required disabled={saving} />
             </div>
             <div className="md:col-span-2 flex justify-end gap-2">
-              <Button type="submit" disabled={saving}>{saving ? 'Creando...' : 'Crear sede'}</Button>
+              <Button type="submit" disabled={saving} className="shadow-sm">
+                {saving ? 'Creando...' : 'Crear Sede'}
+              </Button>
             </div>
           </form>
         </CardContent>

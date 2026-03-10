@@ -113,7 +113,7 @@ export default function AdminVenueDetailPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Sede</h1>
         <Button variant="outline" onClick={() => router.push('/admin/venues')}>

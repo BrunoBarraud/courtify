@@ -7,10 +7,10 @@ import { createAdminClient } from '@/lib/supabase/client'
 
 // Strategy Pattern: Payment strategy interface
 export interface PaymentStrategy {
-  createPayment(data: PaymentData): Promise<PaymentResult>
-  confirmPayment(paymentId: string): Promise<PaymentResult>
-  refundPayment(paymentId: string, amount?: number): Promise<PaymentResult>
-  getPaymentStatus(paymentId: string): Promise<PaymentStatus>
+  createPayment(data: PaymentData, config?: Record<string, any>): Promise<PaymentResult>
+  confirmPayment(paymentId: string, config?: Record<string, any>): Promise<PaymentResult>
+  refundPayment(paymentId: string, amount?: number, config?: Record<string, any>): Promise<PaymentResult>
+  getPaymentStatus(paymentId: string, config?: Record<string, any>): Promise<PaymentStatus>
 }
 
 // Payment data structure
@@ -54,7 +54,8 @@ export class PaymentService {
    */
   async createPayment(
     method: string,
-    data: PaymentData
+    data: PaymentData,
+    config?: Record<string, any>
   ): Promise<PaymentResult> {
     const strategy = this.strategies.get(method)
     
@@ -64,7 +65,7 @@ export class PaymentService {
 
     try {
       // Create payment through strategy
-      const result = await strategy.createPayment(data)
+      const result = await strategy.createPayment(data, config)
 
       // Store payment in database
       if (result.success) {
@@ -92,7 +93,8 @@ export class PaymentService {
    */
   async confirmPayment(
     method: string,
-    paymentId: string
+    paymentId: string,
+    config?: Record<string, any>
   ): Promise<PaymentResult> {
     const strategy = this.strategies.get(method)
     
@@ -100,7 +102,7 @@ export class PaymentService {
       throw new Error(`Payment method ${method} not supported`)
     }
 
-    const result = await strategy.confirmPayment(paymentId)
+    const result = await strategy.confirmPayment(paymentId, config)
 
     // Update payment status in database
     if (result.success) {
@@ -116,7 +118,8 @@ export class PaymentService {
   async refundPayment(
     method: string,
     paymentId: string,
-    amount?: number
+    amount?: number,
+    config?: Record<string, any>
   ): Promise<PaymentResult> {
     const strategy = this.strategies.get(method)
     
@@ -124,7 +127,7 @@ export class PaymentService {
       throw new Error(`Payment method ${method} not supported`)
     }
 
-    const result = await strategy.refundPayment(paymentId, amount)
+    const result = await strategy.refundPayment(paymentId, amount, config)
 
     // Update payment in database
     if (result.success) {
@@ -146,7 +149,8 @@ export class PaymentService {
    */
   async getPaymentStatus(
     method: string,
-    paymentId: string
+    paymentId: string,
+    config?: Record<string, any>
   ): Promise<PaymentStatus> {
     const strategy = this.strategies.get(method)
     
@@ -154,7 +158,7 @@ export class PaymentService {
       throw new Error(`Payment method ${method} not supported`)
     }
 
-    return strategy.getPaymentStatus(paymentId)
+    return strategy.getPaymentStatus(paymentId, config)
   }
 
   /**
