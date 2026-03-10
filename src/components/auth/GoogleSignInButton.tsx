@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
-import { authService } from '@/lib/services/auth.service'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { toast } from 'sonner'
 
 interface GoogleSignInButtonProps {
@@ -13,10 +13,20 @@ interface GoogleSignInButtonProps {
 export default function GoogleSignInButton({ disabled = false }: GoogleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
 
+  const supabase = createClientComponentClient()
+
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true)
-      const { error } = await authService.signInWithGoogle()
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            prompt: 'select_account',
+          },
+        },
+      })
 
       if (error) {
         toast.error('Error al iniciar sesión con Google', {

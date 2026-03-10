@@ -8,6 +8,7 @@ import { notificationService } from './notification/NotificationService'
 import { calculateDurationHours } from '@/lib/utils'
 
 export class BookingService {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private supabase = createAdminClient() as any
 
   private getSlotConfig(courtType: string | null | undefined) {
@@ -160,7 +161,7 @@ export class BookingService {
       for (const p of participants) {
         const isMember = Boolean(p.isMember)
         if (!isMember) {
-          totalAmount += Number((pricingRule as any).non_member_price)
+          totalAmount += Number((pricingRule as Record<string, unknown>).non_member_price)
           continue
         }
 
@@ -196,7 +197,7 @@ export class BookingService {
           throw new Error(`El número de socio ${memberNumber} aún no está asociado a una cuenta`)
         }
 
-        totalAmount += Number((pricingRule as any).member_price)
+        totalAmount += Number((pricingRule as Record<string, unknown>).member_price)
       }
     } else {
       // Fallback legacy: hourly_rate * duración
@@ -241,7 +242,7 @@ export class BookingService {
 
     // Add participants if provided
     if (participants.length > 0) {
-      if (pricingRule && String((pricingRule as any)?.pricing_mode) === 'per_person') {
+      if (pricingRule && String((pricingRule as Record<string, unknown>)?.pricing_mode) === 'per_person') {
         const rows = [] as Array<Record<string, unknown>>
 
         for (const p of participants) {
@@ -249,8 +250,8 @@ export class BookingService {
           let memberId: string | null = null
           let memberNumber: string | null = null
           const priceApplied = isMember
-            ? Number((pricingRule as any).member_price)
-            : Number((pricingRule as any).non_member_price)
+            ? Number((pricingRule as Record<string, unknown>).member_price)
+            : Number((pricingRule as Record<string, unknown>).non_member_price)
 
           if (isMember) {
             memberNumber = String(p.memberNumber ?? '').trim() || null
@@ -323,17 +324,32 @@ export class BookingService {
       totalAmount: finalAmount,
     })
 
-    // Send notification to all venue admins
+    // Send notification to the super admins AND specific venue admins
     const { data: admins } = await this.supabase
       .from('profiles')
-      .select('id')
+      .select('id, role, venue_admins!left(venue_id)')
       .in('role', ['venue_admin', 'super_admin'])
       .eq('is_active', true)
 
     if (admins && admins.length > 0) {
-      // Enviar notificación a cada admin
+      interface ProfileAdmin {
+        id: string;
+        role: string;
+        venue_admins: Array<{ venue_id: string }>;
+      }
+
+      // Filter out venue_admins that do NOT belong to this venue
+      const targetAdmins = admins.filter((admin: ProfileAdmin) => {
+        if (admin.role === 'super_admin') return true;
+        // If venue_admin, check if they are linked to the booked venue
+        if (admin.venue_admins && admin.venue_admins.length > 0) {
+          return admin.venue_admins.some((va: { venue_id: string }) => va.venue_id === court.venue.id);
+        }
+        return false;
+      });
+
       await Promise.allSettled(
-        admins.map((admin: { id: string }) =>
+        targetAdmins.map((admin: { id: string }) =>
           notificationService.sendAdminBookingCreated({
             adminId: admin.id,
             bookingId: booking.id,

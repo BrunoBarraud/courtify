@@ -4,7 +4,7 @@ export default function ContactPage() {
       <div className="mx-auto max-w-[800px]">
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Contacto</h1>
-          <p className="mt-2 text-muted-foreground">¿Interesado en MatchUp para tu club?</p>
+          <p className="mt-2 text-muted-foreground">¿Interesado en MatchUp para tu sede?</p>
         </div>
 
         <div className="text-center space-y-6">
@@ -33,7 +33,7 @@ export default function ContactPage() {
           </div>
 
           <p className="text-muted-foreground">
-            Contactame para conocer más sobre cómo MatchUp puede ayudar a tu club a optimizar la
+            Contactanos para conocer más sobre cómo MatchUp puede ayudar a tu sede a optimizar la
             gestión de canchas y reservas.
           </p>
         </div>

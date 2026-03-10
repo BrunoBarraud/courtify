@@ -12,8 +12,8 @@ import type { Database } from '@/types/database'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'ComplejoApp',
-  description: 'Reservá Tu Cancha',
+  title: 'CanchaLibreApp',
+  description: 'Gestor de Sedes y Reservas Multi-Tenant',
 }
 
 export const viewport: Viewport = {

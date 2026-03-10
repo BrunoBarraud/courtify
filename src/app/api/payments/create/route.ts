@@ -9,6 +9,7 @@ import { createServerClient } from '@/lib/supabase/client'
 import { paymentService } from '@/lib/services/payment/PaymentService'
 import { MercadoPagoPaymentStrategy } from '@/lib/services/payment/MercadoPagoPaymentStrategy'
 import { notificationService } from '@/lib/services/notification/NotificationService'
+import { decrypt } from '@/lib/encryption'
 
 // Register payment strategies
 paymentService.registerStrategy('mercadopago', new MercadoPagoPaymentStrategy())
@@ -27,6 +28,26 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { bookingId, subscriptionId, paymentMethod, currency = 'ARS' } = body
+
+    const tenantId = request.headers.get('x-tenant-id')
+    let mpConfig: Record<string, string> | undefined = undefined
+
+    if (tenantId && paymentMethod === 'mercadopago') {
+      const { data: venue, error: venueError } = await supabase
+        .from('venues')
+        .select('mp_access_token_encrypted, mp_iv')
+        .eq('subdomain', tenantId)
+        .single()
+
+      if (venueError || !venue || !venue.mp_access_token_encrypted || !venue.mp_iv) {
+        return NextResponse.json(
+          { error: 'Venue payment configuration not found' },
+          { status: 400 }
+        )
+      }
+      const accessToken = decrypt(venue.mp_access_token_encrypted, venue.mp_iv)
+      mpConfig = { accessToken }
+    }
 
     // Read Idempotency-Key from header or body
     const idempotencyKey = request.headers.get('Idempotency-Key') || body.idempotencyKey
@@ -100,14 +121,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Create payment
-    const result = await paymentService.createPayment(paymentMethod, {
-      amount,
-      currency,
-      userId: session.user.id,
-      bookingId,
-      subscriptionId,
-      metadata: idempotencyKey ? { idempotencyKey } : undefined,
-    })
+    const result = await paymentService.createPayment(
+      paymentMethod,
+      {
+        amount,
+        currency,
+        userId: session.user.id,
+        bookingId,
+        subscriptionId,
+        metadata: idempotencyKey ? { idempotencyKey } : undefined,
+      },
+      mpConfig
+    )
 
     if (!result.success) {
       // Notificación de error de pago para el jugador

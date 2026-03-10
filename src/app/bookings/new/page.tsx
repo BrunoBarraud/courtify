@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CheckCircle2, Banknote, Wallet } from 'lucide-react'
+import { CheckCircle2, Banknote, Wallet, AlertCircle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -85,7 +85,7 @@ export default function NewBookingPage() {
       }
     }
     fetchDefaultVenue()
-  }, [])
+  }, [selectedVenueId])
 
   useEffect(() => {
     const fetchCourts = async () => {
@@ -140,7 +140,7 @@ export default function NewBookingPage() {
       return
     }
     if (playerCount < 1) setPlayerCount(1)
-  }, [selectedCourt?.court_type])
+  }, [selectedCourt?.court_type, playerCount])
 
   useEffect(() => {
     setParticipants(prev => {
@@ -197,154 +197,67 @@ export default function NewBookingPage() {
   }
 
   return (
-    <div className="container max-w-2xl py-10">
-      <Card className="border-2">
-        <CardHeader>
-          <CardTitle className="text-2xl">Nueva reserva</CardTitle>
-          <CardDescription>
-            Completá los datos para generar tu reserva y continuar al pago.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="p-4 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20">
-                {error}
+    <div className="container max-w-3xl mx-auto py-10 px-4 md:px-8">
+      <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 text-foreground">
+          Reservar Turno
+        </h1>
+        <p className="text-muted-foreground text-lg">Completá los datos paso a paso para agendar tu cancha.</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        {error && (
+          <div className="p-4 text-sm font-medium text-destructive bg-destructive/10 rounded-lg border border-destructive/20 mb-6 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            {error}
+          </div>
+        )}
+
+        <Card className="border border-border/60 shadow-sm overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b pb-4">
+            <CardTitle className="text-xl">1. Cancha y Horario</CardTitle>
+            <CardDescription className="text-sm">Elegí dónde y cuándo querés jugar.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label htmlFor="courtSelect" className="text-sm font-semibold text-foreground">
+                  Cancha a reservar
+                </Label>
+                <select
+                  id="courtSelect"
+                  className="w-full rounded-lg border border-input bg-background px-3 h-11 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  value={courtId}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCourtId(e.target.value)}
+                  disabled={loadingCourts || loading}
+                  required
+                >
+                  <option value="" disabled>
+                    {loadingCourts ? 'Buscando disponibilidad...' : 'Seleccioná una cancha'}
+                  </option>
+                  {courts.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} • {c.court_type} {c.is_indoor ? '• Techada' : ''}
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
-
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">Participantes</Label>
-
-              {selectedCourt?.court_type === 'Pádel' ? (
-                <div className="grid gap-2">
-                  <Label htmlFor="playerCount" className="text-sm text-muted-foreground">
-                    Cantidad de jugadores
-                  </Label>
-                  <select
-                    id="playerCount"
-                    className="w-full rounded-md border-2 border-input bg-background px-3 py-2.5 text-sm"
-                    value={playerCount}
-                    onChange={e => setPlayerCount(Number(e.target.value))}
-                    disabled={loading}
-                  >
-                    <option value={2}>2</option>
-                    <option value={4}>4</option>
-                  </select>
-                </div>
-              ) : (
-                <div className="grid gap-2">
-                  <Label htmlFor="playerCount" className="text-sm text-muted-foreground">
-                    Cantidad de jugadores
-                  </Label>
-                  <Input
-                    id="playerCount"
-                    type="number"
-                    min={1}
-                    value={playerCount}
-                    onChange={e => setPlayerCount(Math.max(1, Number(e.target.value || 1)))}
-                    disabled={loading}
-                    className="border-2"
-                  />
-                </div>
-              )}
 
               <div className="space-y-3">
-                {participants.map((p, idx) => (
-                  <div key={idx} className="rounded-md border p-3 space-y-3">
-                    <div className="space-y-1">
-                      <Label className="text-sm">Jugador {idx + 1}</Label>
-                      <Input
-                        value={p.name}
-                        onChange={e =>
-                          setParticipants(prev => {
-                            const next = [...prev]
-                            next[idx] = { ...next[idx], name: e.target.value }
-                            return next
-                          })
-                        }
-                        placeholder="Nombre y apellido"
-                        className="border-2"
-                        disabled={loading}
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={p.isMember}
-                        onChange={e =>
-                          setParticipants(prev => {
-                            const next = [...prev]
-                            next[idx] = { ...next[idx], isMember: e.target.checked }
-                            return next
-                          })
-                        }
-                        disabled={loading}
-                      />
-                      <Label className="text-sm">Es socio</Label>
-                    </div>
-
-                    {p.isMember && (
-                      <div className="space-y-1">
-                        <Label className="text-sm">Número de socio</Label>
-                        <Input
-                          value={p.memberNumber}
-                          onChange={e =>
-                            setParticipants(prev => {
-                              const next = [...prev]
-                              next[idx] = { ...next[idx], memberNumber: e.target.value }
-                              return next
-                            })
-                          }
-                          placeholder="Ej: 123"
-                          className="border-2"
-                          disabled={loading}
-                        />
-                      </div>
-                    )}
-                  </div>
-                ))}
+                <Label htmlFor="date" className="text-sm font-semibold text-foreground">
+                  Fecha del Encuentro
+                </Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={date}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDate(e.target.value)}
+                  disabled={loading}
+                  className="rounded-lg h-11"
+                />
               </div>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="courtSelect" className="text-base font-semibold">
-                Cancha
-              </Label>
-              <select
-                id="courtSelect"
-                className="w-full rounded-md border-2 border-input bg-background px-3 py-2.5 text-sm focus:border-primary transition-colors"
-                value={courtId}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCourtId(e.target.value)}
-                disabled={loadingCourts || loading}
-                required
-              >
-                <option value="" disabled>
-                  {loadingCourts ? 'Cargando canchas...' : 'Seleccioná una cancha'}
-                </option>
-                {courts.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} • {c.court_type} {c.is_indoor ? '• Techada' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="date" className="text-base font-semibold">
-                Fecha
-              </Label>
-              <Input
-                id="date"
-                type="date"
-                value={date}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDate(e.target.value)}
-                disabled={loading}
-                className="border-2"
-              />
-            </div>
-
+            
             {date && courtId && (
               <div className="space-y-3">
                 <Label className="text-base font-semibold">
@@ -394,159 +307,265 @@ export default function NewBookingPage() {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
 
-            <div className="space-y-2">
-              <Label htmlFor="notes" className="text-base font-semibold">
-                Notas (opcional)
+        {/* Participantes Section */}
+        <Card className="border border-border/60 shadow-sm overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b pb-4">
+            <CardTitle className="text-xl">2. Jugadores</CardTitle>
+            <CardDescription className="text-sm">Indicá cuántas personas juegan y si son socios.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 space-y-6">
+            <div className="space-y-4">
+              {selectedCourt?.court_type === 'Pádel' ? (
+                <div className="grid gap-2 mb-6">
+                  <Label htmlFor="playerCount" className="text-sm font-semibold">
+                    Cantidad de jugadores (Pádel)
+                  </Label>
+                  <select
+                    id="playerCount"
+                    className="w-full md:w-1/2 rounded-lg border border-input bg-background px-3 h-11 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                    value={playerCount}
+                    onChange={e => setPlayerCount(Number(e.target.value))}
+                    disabled={loading}
+                  >
+                    <option value={2}>2 (Single)</option>
+                    <option value={4}>4 (Doble)</option>
+                  </select>
+                </div>
+              ) : (
+                <div className="grid gap-2 mb-6">
+                  <Label htmlFor="playerCount" className="text-sm font-semibold">
+                    Cantidad de jugadores
+                  </Label>
+                  <Input
+                    id="playerCount"
+                    type="number"
+                    min={1}
+                    value={playerCount}
+                    onChange={e => setPlayerCount(Math.max(1, Number(e.target.value || 1)))}
+                    disabled={loading}
+                    className="w-full md:w-1/2 rounded-lg h-11"
+                  />
+                </div>
+              )}
+
+              <div className="grid gap-4 md:grid-cols-2">
+                {participants.map((p, idx) => (
+                  <div key={idx} className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Jugador {idx + 1}</Label>
+                      <Input
+                        value={p.name}
+                        onChange={e =>
+                          setParticipants(prev => {
+                            const next = [...prev]
+                            next[idx] = { ...next[idx], name: e.target.value }
+                            return next
+                          })
+                        }
+                        placeholder="Nombre y apellido"
+                        className="h-10"
+                        disabled={loading}
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id={`is-member-${idx}`}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        checked={p.isMember}
+                        onChange={e =>
+                          setParticipants(prev => {
+                            const next = [...prev]
+                            next[idx] = { ...next[idx], isMember: e.target.checked }
+                            return next
+                          })
+                        }
+                        disabled={loading}
+                      />
+                      <Label htmlFor={`is-member-${idx}`} className="text-sm cursor-pointer">Es socio de la sede</Label>
+                    </div>
+
+                    {p.isMember && (
+                      <div className="space-y-2 pt-2 animate-in fade-in duration-200">
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase">Número de socio</Label>
+                        <Input
+                          value={p.memberNumber}
+                          onChange={e =>
+                            setParticipants(prev => {
+                              const next = [...prev]
+                              next[idx] = { ...next[idx], memberNumber: e.target.value }
+                              return next
+                            })
+                          }
+                          placeholder="Ej: 00123"
+                          className="h-10 border-primary/20 focus-visible:ring-primary/20"
+                          disabled={loading}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="space-y-3 pt-4 border-t border-border/40 mt-6">
+              <Label htmlFor="notes" className="text-sm font-semibold">
+                Notas adicionales (Opcional)
               </Label>
               <Input
                 id="notes"
-                placeholder="Ej: Traer pelotas"
+                placeholder="Ej: Necesitamos alquilar 2 pelotas."
                 value={notes}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNotes(e.target.value)}
                 disabled={loading}
-                className="border-2"
+                className="h-11"
               />
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="flex gap-3 pt-4">
+        {/* Form Actions */}
+        <div className="flex flex-col sm:flex-row gap-4 pt-6 pb-10">
+          <Button
+            type="submit"
+            disabled={loading || !startDatetime}
+            className="flex-1 w-full sm:w-auto h-14 text-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
+            size="lg"
+          >
+            {loading ? 'Procesando...' : 'Confirmar Reserva'}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push('/venues')}
+            className="flex-1 w-full sm:w-auto h-14 text-base font-medium"
+            size="lg"
+          >
+            Volver
+          </Button>
+        </div>
+
+        {createdBookingId && (
+          <div className="mt-6 space-y-4 border-t-2 pt-6">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500/10 mb-3">
+                <CheckCircle2 className="h-6 w-6 text-green-500" />
+              </div>
+              <h3 className="text-lg font-semibold mb-1">¡Reserva creada!</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Elegí un método de pago para confirmar
+              </p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
               <Button
-                type="submit"
-                disabled={loading || !startDatetime}
-                className="flex-1"
+                type="button"
+                onClick={() =>
+                  router.push(
+                    `/payments/start?bookingId=${createdBookingId}&method=mercadopago`
+                  )
+                }
+                className="flex-1 gap-2"
                 size="lg"
               >
-                {loading ? 'Creando...' : 'Crear reserva'}
+                <Wallet className="h-4 w-4" />
+                Mercado Pago
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push('/venues')}
+                onClick={() => setShowCashDialog(true)}
+                className="flex-1 gap-2"
                 size="lg"
               >
-                Cancelar
+                <Banknote className="h-4 w-4" />
+                Efectivo
               </Button>
             </div>
+          </div>
+        )}
 
-            {createdBookingId && (
-              <div className="mt-6 space-y-4 border-t-2 pt-6">
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500/10 mb-3">
-                    <CheckCircle2 className="h-6 w-6 text-green-500" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-1">¡Reserva creada!</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Elegí un método de pago para confirmar
+        {/* Dialog para pago en efectivo */}
+        <Dialog open={showCashDialog} onOpenChange={setShowCashDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Banknote className="h-5 w-5 text-primary" />
+                Pago en Efectivo
+              </DialogTitle>
+              <DialogDescription className="space-y-4 pt-4">
+                <div className="rounded-lg bg-primary/10 p-4 border-2 border-primary/20">
+                  <p className="text-foreground font-medium mb-2">
+                    Tu reserva ha sido creada exitosamente.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Para confirmarla, deberás realizar el pago en efectivo en:
                   </p>
                 </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <Button
-                    type="button"
-                    onClick={() =>
-                      router.push(
-                        `/payments/start?bookingId=${createdBookingId}&method=mercadopago`
-                      )
-                    }
-                    className="flex-1 gap-2"
-                    size="lg"
-                  >
-                    <Wallet className="h-4 w-4" />
-                    Mercado Pago
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowCashDialog(true)}
-                    className="flex-1 gap-2"
-                    size="lg"
-                  >
-                    <Banknote className="h-4 w-4" />
-                    Efectivo
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Dialog para pago en efectivo */}
-            <Dialog open={showCashDialog} onOpenChange={setShowCashDialog}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Banknote className="h-5 w-5 text-primary" />
-                    Pago en Efectivo
-                  </DialogTitle>
-                  <DialogDescription className="space-y-4 pt-4">
-                    <div className="rounded-lg bg-primary/10 p-4 border-2 border-primary/20">
-                      <p className="text-foreground font-medium mb-2">
-                        Tu reserva ha sido creada exitosamente.
-                      </p>
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-xs font-bold text-primary">1</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Secretaría del complejo</p>
                       <p className="text-sm text-muted-foreground">
-                        Para confirmarla, deberás realizar el pago en efectivo en:
+                        Horario: Lunes a Viernes 9:00 - 18:00hs
                       </p>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex items-start gap-2">
-                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <span className="text-xs font-bold text-primary">1</span>
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">Secretaría del complejo</p>
-                          <p className="text-sm text-muted-foreground">
-                            Horario: Lunes a Viernes 9:00 - 18:00hs
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <span className="text-xs font-bold text-primary">2</span>
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">Pórtico de entrada</p>
-                          <p className="text-sm text-muted-foreground">Al momento de tu reserva</p>
-                        </div>
-                      </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-xs font-bold text-primary">2</span>
                     </div>
-                    <div className="rounded-lg bg-yellow-500/10 p-4 border border-yellow-500/20">
-                      <p className="text-sm text-foreground">
-                        <strong>Importante:</strong> Tu reserva quedará en estado &quot;Pendiente de
-                        pago&quot; hasta que se confirme el pago en efectivo.
-                      </p>
+                    <div>
+                      <p className="font-medium text-foreground">Pórtico de entrada</p>
+                      <p className="text-sm text-muted-foreground">Al momento de tu reserva</p>
                     </div>
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowCashDialog(false)}
-                    className="flex-1"
-                  >
-                    Volver
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      const run = async () => {
-                        if (!createdBookingId) return
-                        try {
-                          await fetch(`/api/bookings/${createdBookingId}/cash`, {
-                            method: 'POST',
-                          })
-                        } finally {
-                          setShowCashDialog(false)
-                          router.push('/bookings')
-                        }
-                      }
-                      void run()
-                    }}
-                    className="flex-1"
-                  >
-                    Entendido
-                  </Button>
+                  </div>
                 </div>
-              </DialogContent>
-            </Dialog>
-          </form>
-        </CardContent>
-      </Card>
+                <div className="rounded-lg bg-yellow-500/10 p-4 border border-yellow-500/20">
+                  <p className="text-sm text-foreground">
+                    <strong>Importante:</strong> Tu reserva quedará en estado &quot;Pendiente de
+                    pago&quot; hasta que se confirme el pago en efectivo.
+                  </p>
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowCashDialog(false)}
+                className="flex-1"
+              >
+                Volver
+              </Button>
+              <Button
+                onClick={() => {
+                  const run = async () => {
+                    if (!createdBookingId) return
+                    try {
+                      await fetch(`/api/bookings/${createdBookingId}/cash`, {
+                        method: 'POST',
+                      })
+                    } finally {
+                      setShowCashDialog(false)
+                      router.push('/bookings')
+                    }
+                  }
+                  void run()
+                }}
+                className="flex-1"
+              >
+                Entendido
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </form>
     </div>
   )
 }

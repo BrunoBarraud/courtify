@@ -66,7 +66,7 @@ export default async function VenueDetailPage({ params }: Props) {
       <div className="bg-background mb-8 shadow-sm">
         {/* 1. LA FOTO DE PORTADA (Banner) */}
         {/* Ya no tiene texto encima, así que no necesita un overlay oscuro fuerte */}
-        <div className="relative h-[220px] md:h-[400px] w-full bg-slate-200">
+        <div className="relative h-[220px] md:h-[400px] w-full bg-muted overflow-hidden">
           {venue.cover_image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -75,8 +75,8 @@ export default async function VenueDetailPage({ params }: Props) {
               className="h-full w-full object-contain md:object-cover bg-black"
             />
           ) : (
-            <div className="h-full w-full flex items-center justify-center bg-gradient-to-r from-slate-300 to-slate-400">
-              <MapPin className="h-20 w-20 text-slate-500/50" />
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 flex items-center justify-center">
+              <MapPin className="h-20 w-20 text-primary/20" />
             </div>
           )}
         </div>
@@ -88,7 +88,7 @@ export default async function VenueDetailPage({ params }: Props) {
             {/* A. EL AVATAR (Foto de Perfil) */}
             {/* Usamos margen negativo superior (-mt) para subirlo y que pise el banner */}
             <div className="-mt-24 md:-mt-32 relative z-10 flex-shrink-0 mx-auto md:mx-0">
-              <div className="w-40 h-40 md:w-52 md:h-52 rounded-full overflow-hidden shadow-2xl ring-4 ring-background">
+              <div className="w-40 h-40 md:w-52 md:h-52 rounded-full overflow-hidden shadow-2xl ring-4 ring-background bg-card">
                 {venue.profile_image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -97,8 +97,8 @@ export default async function VenueDetailPage({ params }: Props) {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="h-full w-full bg-slate-100 flex items-center justify-center">
-                    <MapPin className="h-16 w-16 text-slate-400" />
+                  <div className="h-full w-full bg-muted flex items-center justify-center border border-border/50">
+                    <MapPin className="h-16 w-16 text-muted-foreground" />
                   </div>
                 )}
               </div>
@@ -157,9 +157,8 @@ export default async function VenueDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* --- CONTENIDO PRINCIPAL (Layout de 2 columnas opcional, o una sola) --- */}
-      {/* Para simplificar, mantenemos una columna central por ahora */}
-      <div className="container container-slim py-8 space-y-10">
+      {/* --- CONTENIDO PRINCIPAL --- */}
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-12">
         {/* Descripción */}
         {venue.description && (
           <Card>
@@ -188,10 +187,10 @@ export default async function VenueDetailPage({ params }: Props) {
               {courts.map((c: Court) => (
                 <Card
                   key={c.id}
-                  className="overflow-hidden hover:shadow-lg transition-all duration-300 group flex flex-col"
+                  className="overflow-hidden shadow-sm hover:shadow-md border-border/60 transition-all duration-300 group flex flex-col"
                 >
                   {/* Imagen de la cancha */}
-                  <div className="relative h-48 bg-slate-800 overflow-hidden">
+                  <div className="relative h-48 bg-muted overflow-hidden">
                     {/* (Acá iría la foto real de la cancha si tuvieras) */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
 
@@ -259,8 +258,7 @@ export default async function VenueDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Ubicación y Contacto (Layout simplificado) */}
-        <div className="grid md:grid-cols-3 gap-8 items-start">
+        <div className="grid md:grid-cols-3 gap-8 items-start mb-8">
           {/* Mapa ocupa 2 columnas */}
           <Card className="md:col-span-2 overflow-hidden">
             <div className="aspect-[16/9] w-full bg-muted relative">

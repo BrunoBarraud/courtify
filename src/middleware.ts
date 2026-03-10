@@ -3,7 +3,27 @@ import type { NextRequest } from 'next/server'
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
+  // 1. Detección de Tenant (Multi-Sede)
+  let tenant = req.headers.get('x-tenant-id') || req.headers.get('x-subdomain');
+
+  if (!tenant) {
+    const hostname = req.headers.get('host') || '';
+    const currentHost = hostname.split(':')[0]; // remover puerto
+    const subdomain = currentHost.split('.')[0];
+    
+    // Ignorar dominios principales y subdominios estándar
+    if (subdomain !== 'www' && subdomain !== 'localhost' && subdomain !== 'matchup' && subdomain !== '127') {
+      tenant = subdomain;
+    }
+  }
+
+  // 2. Preparar la respuesta inicial para poder inyectarle headers luego
+  const res = NextResponse.next();
+
+  if (tenant) {
+    res.headers.set('x-tenant-id', tenant);
+  }
+
   const supabase = createMiddlewareClient({ req, res })
 
   const redirectWithCookies = (to: URL) => {

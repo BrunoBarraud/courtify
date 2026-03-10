@@ -7,96 +7,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-// Services
-import { authService } from '@/lib/services/auth.service'
-
-// UI Components
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Trophy } from 'lucide-react'
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton'
 
-// Schema de validación
-const signInSchema = z.object({
-  email: z.string().email('Email inválido').min(1, 'El email es requerido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-})
-
-type SignInFormData = z.infer<typeof signInSchema>
-
 export default function SignInPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<SignInFormData>({
-    resolver: zodResolver(signInSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  })
-
-  const onSubmit = async (data: SignInFormData) => {
-    try {
-      setIsLoading(true)
-
-      const { data: authData, error } = await authService.signInWithEmail(data.email, data.password)
-
-      if (error) {
-        const errorMessage = error.message.includes('Invalid login credentials')
-          ? 'Credenciales inválidas. Verifica tu email y contraseña.'
-          : error.message.includes('Email not confirmed')
-            ? 'Por favor, verifica tu correo electrónico antes de iniciar sesión.'
-            : 'Ocurrió un error al iniciar sesión. Intenta nuevamente.'
-
-        toast.error('Error de autenticación', {
-          description: errorMessage,
-        })
-        return
-      }
-
-      if (authData?.session) {
-        // Mostrar mensaje de éxito
-        toast.success('¡Bienvenido de vuelta!')
-
-        // Redirigir a la página anterior o al dashboard
-        const redirectTo = searchParams.get('redirectedFrom') || '/dashboard'
-        setIsRedirecting(true)
-        router.push(redirectTo)
-        router.refresh()
-      }
-    } catch (error) {
-      console.error('Error durante el inicio de sesión:', error)
-      toast.error('Error', {
-        description: 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.',
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   // Efecto para manejar redirección después de autenticación exitosa
   useEffect(() => {
@@ -127,112 +54,55 @@ export default function SignInPage() {
   }, [searchParams])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 rounded-full bg-indigo-100 p-2 flex items-center justify-center">
-            <Trophy className="h-10 w-10 text-indigo-600" />
+          <div className="mx-auto h-16 w-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 shadow-sm">
+            <svg
+              className="h-8 w-8 text-primary"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+            </svg>
           </div>
-          <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
+          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-foreground">
             Bienvenido de vuelta
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             ¿No tenés una cuenta?{' '}
             <Link
               href="/auth/signup"
-              className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+              className="font-medium text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline"
             >
               Registrate acá
             </Link>
           </p>
         </div>
 
-        <Card className="shadow-lg overflow-hidden">
-          <CardHeader className="space-y-1">
+        <Card className="border border-border/50 shadow-xl overflow-hidden backdrop-blur-sm bg-card/95">
+          <CardHeader className="space-y-1 pb-6">
             <CardTitle className="text-2xl font-bold">Iniciar sesión</CardTitle>
-            <CardDescription className="text-gray-600">
-              Ingresá tus credenciales para acceder a tu cuenta
+            <CardDescription className="text-muted-foreground">
+              Accedé con tu cuenta de Google para continuar
             </CardDescription>
           </CardHeader>
 
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  autoComplete="email"
-                  disabled={isLoading || isRedirecting}
-                  {...register('email')}
-                  className={errors.email ? 'border-red-500' : ''}
-                />
-                {errors.email && (
-                  <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Contraseña</Label>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  disabled={isLoading || isRedirecting}
-                  {...register('password')}
-                  className={errors.password ? 'border-red-500' : ''}
-                />
-                {errors.password && (
-                  <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
-                )}
-              </div>
-            </CardContent>
-
-            <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full" disabled={isLoading || isRedirecting}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Iniciando sesión...
-                  </>
-                ) : isRedirecting ? (
-                  'Redirigiendo...'
-                ) : (
-                  'Iniciar sesión'
-                )}
-              </Button>
-
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-white px-2 text-gray-500">O continuá con</span>
-                </div>
-              </div>
-
-              <GoogleSignInButton disabled={isLoading || isRedirecting} />
-            </CardFooter>
-          </form>
+          <CardContent className="pt-6">
+            <GoogleSignInButton disabled={isLoading || isRedirecting} />
+          </CardContent>
         </Card>
 
-        <p className="mt-8 text-center text-xs text-gray-500">
+        <p className="text-center text-xs text-muted-foreground mt-8">
           Al continuar, aceptás nuestros{' '}
-          <Link href="/terms" className="underline hover:text-gray-700">
+          <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">
             Términos de servicio
           </Link>{' '}
           y{' '}
-          <Link href="/privacy" className="underline hover:text-gray-700">
+          <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">
             Política de privacidad
           </Link>
           .

@@ -575,8 +575,8 @@ export class NotificationService {
 
 // Singleton instance
 export const notificationService = new NotificationService()
-// Registrar automáticamente el canal de email si hay API key de SendGrid
-if (process.env.SENDGRID_API_KEY) {
+// Registrar automáticamente el canal de email si hay SMTP configurado
+if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD) {
   notificationService.registerObserver('email', new EmailNotificationObserver())
 }
 // Registrar push si hay credenciales de Firebase
