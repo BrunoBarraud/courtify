@@ -22,7 +22,7 @@ export default function AboutPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-muted-foreground">
             <p>
-              MatchUp es un sistema integral diseñado específicamente para sedes y complejos deportivos que
+              MatchUp es un sistema integral diseñado específicamente para sedes deportivas que
               buscan digitalizar y optimizar su gestión de canchas. Ofrecemos una plataforma
               completa donde tus clientes pueden reservar canchas de manera sencilla mientras vos
               mantenés el control total de tu operación.

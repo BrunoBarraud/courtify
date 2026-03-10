@@ -78,9 +78,13 @@ export default function AdminVenueDetailPage() {
       if (!courtsRes.ok) throw new Error(courtsData.error || 'No se pudieron cargar las canchas')
       setVenue(venueData.venue)
       setCourts(courtsData.courts || [])
-      if (!selectedCourtId && (courtsData.courts || []).length > 0) {
-        setSelectedCourtId(courtsData.courts[0].id)
-      }
+      setCourts(courtsData.courts || [])
+      setSelectedCourtId(prev => {
+        if (!prev && courtsData.courts?.length > 0) {
+          return courtsData.courts[0].id
+        }
+        return prev
+      })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error cargando datos')
     } finally {
@@ -149,9 +153,17 @@ export default function AdminVenueDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Sede</h1>
-        <Button variant="outline" onClick={() => router.push('/admin/venues')}>
-          Volver
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="default"
+            onClick={() => router.push(`/admin/venues/${venueId}/tournaments`)}
+          >
+            Torneos
+          </Button>
+          <Button variant="outline" onClick={() => router.push('/admin/venues')}>
+            Volver
+          </Button>
+        </div>
       </div>
 
       {error && (

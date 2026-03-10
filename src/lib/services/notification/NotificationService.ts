@@ -6,6 +6,7 @@
 import { createAdminClient } from '@/lib/supabase/client'
 import { EmailNotificationObserver } from './EmailNotificationObserver'
 import { PushNotificationObserver } from './PushNotificationObserver'
+import { formatDateTimeAR } from '@/lib/i18n/format'
 
 type NotificationChannel = 'email' | 'push' | 'sms'
 
@@ -424,14 +425,7 @@ export class NotificationService {
     status: string
     finalAmount: number
   }): Promise<void> {
-    const startStr = new Date(data.startDatetime).toLocaleString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      timeZone: 'America/Argentina/Buenos_Aires',
-    })
+    const startStr = formatDateTimeAR(data.startDatetime)
     const endStr = new Date(data.endDatetime).toLocaleTimeString('es-AR', {
       hour: '2-digit',
       minute: '2-digit',
@@ -442,7 +436,7 @@ export class NotificationService {
       userId: data.adminId,
       type: 'admin_booking_created',
       title: `Nueva reserva - ${data.bookingNumber}`,
-      body: `Se reservó ${data.courtName} en ${data.venueName} para el ${startStr} a ${endStr}.`,
+      body: `Se reservó ${data.courtName} en ${data.venueName} para el ${startStr} hasta las ${endStr} hs.`,
       data: {
         bookingId: data.bookingId,
         bookingNumber: data.bookingNumber,
@@ -477,14 +471,7 @@ export class NotificationService {
     finalAmount: number
     reason?: string
   }): Promise<void> {
-    const startStr = new Date(data.startDatetime).toLocaleString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      timeZone: 'America/Argentina/Buenos_Aires',
-    })
+    const startStr = formatDateTimeAR(data.startDatetime)
     const endStr = new Date(data.endDatetime).toLocaleTimeString('es-AR', {
       hour: '2-digit',
       minute: '2-digit',
@@ -497,7 +484,7 @@ export class NotificationService {
       title: `Reserva cancelada - ${data.bookingNumber}`,
       body: `Se canceló la reserva de ${data.courtName} en ${
         data.venueName
-      } (del ${startStr} a ${endStr}).${data.reason ? ` Motivo: ${data.reason}.` : ''}`,
+      } (del ${startStr} hasta las ${endStr} hs).${data.reason ? ` Motivo: ${data.reason}.` : ''}`,
       data: {
         bookingId: data.bookingId,
         bookingNumber: data.bookingNumber,

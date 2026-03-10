@@ -194,7 +194,7 @@ export default function AdminCourtsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Gestión de Canchas</h1>
-          <p className="text-muted-foreground">Administrá las canchas del complejo</p>
+          <p className="text-muted-foreground">Administrá las canchas de la sede</p>
         </div>
         <Button onClick={openCreateDialog} className="gap-2">
           <Plus className="h-4 w-4" />
@@ -222,7 +222,13 @@ export default function AdminCourtsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {courts.map(court => (
-            <Card key={court.id} className={cn('border border-border/50 shadow-sm hover:shadow-md transition-shadow', !court.is_active && 'opacity-60')}>
+            <Card
+              key={court.id}
+              className={cn(
+                'border border-border/50 shadow-sm hover:shadow-md transition-shadow',
+                !court.is_active && 'opacity-60'
+              )}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div>
@@ -283,7 +289,7 @@ export default function AdminCourtsPage() {
             <DialogDescription>
               {editingCourt
                 ? 'Modificá los datos de la cancha'
-                : 'Creá una nueva cancha para el complejo'}
+                : 'Creá una nueva cancha para la sede'}
             </DialogDescription>
           </DialogHeader>
 

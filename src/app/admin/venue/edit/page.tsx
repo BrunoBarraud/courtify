@@ -157,8 +157,8 @@ export default function EditVenuePage() {
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Editar Complejo</h1>
-          <p className="text-muted-foreground">Configurá la información del complejo deportivo</p>
+          <h1 className="text-3xl font-bold">Editar Sede</h1>
+          <p className="text-muted-foreground">Configurá la información de la sede deportiva</p>
         </div>
         <Button variant="outline" onClick={() => router.push('/admin/bookings')}>
           Volver
@@ -185,18 +185,18 @@ export default function EditVenuePage() {
               <MapPin className="h-5 w-5" />
               Información Básica
             </CardTitle>
-            <CardDescription>Nombre y ubicación del complejo</CardDescription>
+            <CardDescription>Nombre y ubicación de la sede</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name">Nombre del Complejo *</Label>
+                <Label htmlFor="name">Nombre de la Sede *</Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   required
-                  placeholder="Ej: ComplejoApp"
+                  placeholder="Ej: SedeApp"
                 />
               </div>
               <div className="space-y-2">
@@ -219,7 +219,7 @@ export default function EditVenuePage() {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="Ej: info@complejo.com"
+                  placeholder="Ej: info@sede.com"
                 />
               </div>
               <div className="space-y-2">
@@ -294,7 +294,7 @@ export default function EditVenuePage() {
         <Card>
           <CardHeader>
             <CardTitle>Descripción</CardTitle>
-            <CardDescription>Información adicional sobre el complejo</CardDescription>
+            <CardDescription>Información adicional sobre la sede</CardDescription>
           </CardHeader>
           <CardContent>
             <Textarea
@@ -302,7 +302,7 @@ export default function EditVenuePage() {
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                 setDescription(e.target.value)
               }
-              placeholder="Describe el complejo, sus instalaciones, horarios, etc."
+              placeholder="Describe la sede, sus instalaciones, horarios, etc."
               rows={5}
               className="resize-none"
             />
@@ -317,7 +317,7 @@ export default function EditVenuePage() {
               Foto de Perfil
             </CardTitle>
             <CardDescription>
-              Logo o imagen principal del complejo (se muestra circular)
+              Logo o imagen principal de la sede (se muestra circular)
             </CardDescription>
           </CardHeader>
           <CardContent>
