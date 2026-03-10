@@ -102,7 +102,7 @@ export default function UserMenu() {
   const handleSignOut = async () => {
     try {
       setIsLoading(true)
-      
+
       // Llamar al endpoint del servidor para que se encargue de limpiar las cookies fuertemente
       await fetch('/api/auth/signout', { method: 'POST' })
 
@@ -151,7 +151,7 @@ export default function UserMenu() {
       <Button
         variant="ghost"
         className="relative h-10 justify-start space-x-2 px-2"
-        onClick={() => router.push('/perfil')}
+        onClick={() => router.push('/profile')}
       >
         <Avatar className="h-8 w-8">
           <AvatarImage src={user.user_metadata?.avatar_url || ''} alt={user.email} />
@@ -187,7 +187,7 @@ export default function UserMenu() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => router.push('/perfil')}>
+            <DropdownMenuItem onClick={() => router.push('/profile')}>
               <User className="mr-2 h-4 w-4" />
               <span>Perfil</span>
             </DropdownMenuItem>

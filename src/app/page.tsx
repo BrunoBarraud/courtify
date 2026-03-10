@@ -1,6 +1,6 @@
 /**
  * Landing Page
- * Main entry point for the Complejo Deportivo App
+ * Main entry point for the Sede Deportiva App
  */
 
 import Link from 'next/link'
@@ -13,9 +13,9 @@ import { createServerClient } from '@/lib/supabase/client'
 export default async function HomePage() {
   const supabase = createServerClient(() => cookies())
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const isAuthed = !!session
+    data: { user },
+  } = await supabase.auth.getUser()
+  const isAuthed = !!user
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -38,30 +38,34 @@ export default async function HomePage() {
             </p>
             {isAuthed ? (
               <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
-                <Button asChild size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
+                <Button
+                  asChild
+                  size="lg"
+                  className="gap-2 shadow-lg hover:shadow-xl transition-shadow"
+                >
                   <Link href="/bookings/new">
                     Nueva reserva
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="gap-2">
-                  <Link href="/dashboard">
-                    Ir al dashboard
-                  </Link>
+                  <Link href="/dashboard">Ir al dashboard</Link>
                 </Button>
               </div>
             ) : (
               <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
-                <Button asChild size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
+                <Button
+                  asChild
+                  size="lg"
+                  className="gap-2 shadow-lg hover:shadow-xl transition-shadow"
+                >
                   <Link href="/auth/signup">
                     Registrate ahora
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="gap-2">
-                  <Link href="/auth/signin">
-                    Iniciar sesión
-                  </Link>
+                  <Link href="/auth/signin">Iniciar sesión</Link>
                 </Button>
               </div>
             )}
@@ -194,27 +198,60 @@ export default async function HomePage() {
                 </span>
               </div>
               <p className="text-sm text-muted-foreground mb-4 max-w-[300px]">
-                La plataforma integral de gestión y reservas para tu complejo deportivo. Digitalizá tu sede y aumentá tus ganancias hoy.
+                La plataforma integral de gestión y reservas para tu sede deportiva. Digitalizá tu
+                sede y aumentá tus ganancias hoy.
               </p>
             </div>
-            
+
             <div className="lg:col-span-2">
               <h3 className="font-semibold mb-4 text-foreground">Producto</h3>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><Link href="#" className="hover:text-primary transition-colors">Características</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Solución Multi-Sede</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Precios</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Casos de Éxito</Link></li>
+                <li>
+                  <Link href="#" className="hover:text-primary transition-colors">
+                    Características
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-primary transition-colors">
+                    Solución Multi-Sede
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-primary transition-colors">
+                    Precios
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-primary transition-colors">
+                    Casos de Éxito
+                  </Link>
+                </li>
               </ul>
             </div>
 
             <div className="lg:col-span-3">
               <h3 className="font-semibold mb-4 text-foreground">Recursos</h3>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><Link href="#" className="hover:text-primary transition-colors">Centro de Ayuda</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Blog de Gestión</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Guías para Administradores</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">API para Desarrolladores</Link></li>
+                <li>
+                  <Link href="#" className="hover:text-primary transition-colors">
+                    Centro de Ayuda
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-primary transition-colors">
+                    Blog de Gestión
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-primary transition-colors">
+                    Guías para Administradores
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-primary transition-colors">
+                    API para Desarrolladores
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -222,7 +259,10 @@ export default async function HomePage() {
               <h3 className="font-semibold mb-4 text-foreground">Contacto Comercial</h3>
               <ul className="space-y-3 text-sm text-muted-foreground">
                 <li>
-                  <a className="hover:text-primary transition-colors" href="mailto:brunobarraud.contacto@gmail.com">
+                  <a
+                    className="hover:text-primary transition-colors"
+                    href="mailto:brunobarraud.contacto@gmail.com"
+                  >
                     brunobarraud.contacto@gmail.com
                   </a>
                 </li>
@@ -242,18 +282,27 @@ export default async function HomePage() {
               </ul>
             </div>
           </div>
-          
+
           <div className="mt-12 pt-8 border-t flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
             <div>
               &copy; {new Date().getFullYear()} CanchaLibreApp. Todos los derechos reservados.
             </div>
             <div className="flex gap-6">
-              <Link href="#" className="hover:text-primary transition-colors">Términos de Servicio</Link>
-              <Link href="#" className="hover:text-primary transition-colors">Política de Privacidad</Link>
+              <Link href="#" className="hover:text-primary transition-colors">
+                Términos de Servicio
+              </Link>
+              <Link href="#" className="hover:text-primary transition-colors">
+                Política de Privacidad
+              </Link>
             </div>
             <div className="flex items-center gap-1">
               <span>Desarrollado por</span>
-              <a href="https://instagram.com/brunoobarraud" target="_blank" rel="noreferrer" className="font-semibold text-foreground hover:text-primary transition-colors">
+              <a
+                href="https://instagram.com/brunoobarraud"
+                target="_blank"
+                rel="noreferrer"
+                className="font-semibold text-foreground hover:text-primary transition-colors"
+              >
                 Bruno Barraud
               </a>
             </div>

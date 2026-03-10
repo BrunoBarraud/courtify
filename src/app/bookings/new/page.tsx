@@ -202,10 +202,15 @@ export default function NewBookingPage() {
         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 text-foreground">
           Reservar Turno
         </h1>
-        <p className="text-muted-foreground text-lg">Completá los datos paso a paso para agendar tu cancha.</p>
+        <p className="text-muted-foreground text-lg">
+          Completá los datos paso a paso para agendar tu cancha.
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700"
+      >
         {error && (
           <div className="p-4 text-sm font-medium text-destructive bg-destructive/10 rounded-lg border border-destructive/20 mb-6 flex items-center gap-2">
             <AlertCircle className="h-4 w-4" />
@@ -216,7 +221,9 @@ export default function NewBookingPage() {
         <Card className="border border-border/60 shadow-sm overflow-hidden">
           <CardHeader className="bg-muted/30 border-b pb-4">
             <CardTitle className="text-xl">1. Cancha y Horario</CardTitle>
-            <CardDescription className="text-sm">Elegí dónde y cuándo querés jugar.</CardDescription>
+            <CardDescription className="text-sm">
+              Elegí dónde y cuándo querés jugar.
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
@@ -257,7 +264,7 @@ export default function NewBookingPage() {
                 />
               </div>
             </div>
-            
+
             {date && courtId && (
               <div className="space-y-3">
                 <Label className="text-base font-semibold">
@@ -314,7 +321,9 @@ export default function NewBookingPage() {
         <Card className="border border-border/60 shadow-sm overflow-hidden">
           <CardHeader className="bg-muted/30 border-b pb-4">
             <CardTitle className="text-xl">2. Jugadores</CardTitle>
-            <CardDescription className="text-sm">Indicá cuántas personas juegan y si son socios.</CardDescription>
+            <CardDescription className="text-sm">
+              Indicá cuántas personas juegan y si son socios.
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <div className="space-y-4">
@@ -353,7 +362,10 @@ export default function NewBookingPage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 {participants.map((p, idx) => (
-                  <div key={idx} className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-4">
+                  <div
+                    key={idx}
+                    className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-4"
+                  >
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Jugador {idx + 1}</Label>
                       <Input
@@ -386,12 +398,16 @@ export default function NewBookingPage() {
                         }
                         disabled={loading}
                       />
-                      <Label htmlFor={`is-member-${idx}`} className="text-sm cursor-pointer">Es socio de la sede</Label>
+                      <Label htmlFor={`is-member-${idx}`} className="text-sm cursor-pointer">
+                        Es socio de la sede
+                      </Label>
                     </div>
 
                     {p.isMember && (
                       <div className="space-y-2 pt-2 animate-in fade-in duration-200">
-                        <Label className="text-xs font-semibold text-muted-foreground uppercase">Número de socio</Label>
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase">
+                          Número de socio
+                        </Label>
                         <Input
                           value={p.memberNumber}
                           onChange={e =>
@@ -411,7 +427,7 @@ export default function NewBookingPage() {
                 ))}
               </div>
             </div>
-            
+
             <div className="space-y-3 pt-4 border-t border-border/40 mt-6">
               <Label htmlFor="notes" className="text-sm font-semibold">
                 Notas adicionales (Opcional)
@@ -464,9 +480,7 @@ export default function NewBookingPage() {
               <Button
                 type="button"
                 onClick={() =>
-                  router.push(
-                    `/payments/start?bookingId=${createdBookingId}&method=mercadopago`
-                  )
+                  router.push(`/payments/start?bookingId=${createdBookingId}&method=mercadopago`)
                 }
                 className="flex-1 gap-2"
                 size="lg"
@@ -511,7 +525,7 @@ export default function NewBookingPage() {
                       <span className="text-xs font-bold text-primary">1</span>
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">Secretaría del complejo</p>
+                      <p className="font-medium text-foreground">Secretaría de la sede</p>
                       <p className="text-sm text-muted-foreground">
                         Horario: Lunes a Viernes 9:00 - 18:00hs
                       </p>
@@ -536,11 +550,7 @@ export default function NewBookingPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="flex gap-3 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowCashDialog(false)}
-                className="flex-1"
-              >
+              <Button variant="outline" onClick={() => setShowCashDialog(false)} className="flex-1">
                 Volver
               </Button>
               <Button

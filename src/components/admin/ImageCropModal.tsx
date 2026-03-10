@@ -310,7 +310,7 @@ export function ImageCropModal({
                         </div>
                       </div>
                       <div className="pt-16 px-6 pb-6">
-                        <h4 className="font-bold text-lg">Complejo Deportivo</h4>
+                        <h4 className="font-bold text-lg">Sede Deportiva</h4>
                         <p className="text-sm text-muted-foreground">Justiniano Posse, Córdoba</p>
                       </div>
                     </>
@@ -327,7 +327,7 @@ export function ImageCropModal({
                         )}
                       </div>
                       <div className="px-6 py-4">
-                        <h4 className="font-bold text-lg">Complejo Deportivo</h4>
+                        <h4 className="font-bold text-lg">Sede Deportiva</h4>
                         <p className="text-sm text-muted-foreground">Justiniano Posse, Córdoba</p>
                       </div>
                     </>
@@ -336,7 +336,7 @@ export function ImageCropModal({
               </div>
 
               <p className="text-xs text-muted-foreground mt-2">
-                ℹ️ Así se verá tu imagen en el perfil del complejo
+                ℹ️ Así se verá tu imagen en el perfil de la sede
               </p>
             </div>
           </div>

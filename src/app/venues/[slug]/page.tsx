@@ -4,19 +4,16 @@ import Link from 'next/link'
 import { createServerClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import {
-  MapPin,
-  Phone,
-  Mail,
-  Clock,
-  Wifi,
-  Car,
-  Users,
-  Coffee,
-  Calendar,
-  Share2,
-  Info,
-} from 'lucide-react'
+type VenueTournament = {
+  id: string
+  name: string
+  status: string
+  description: string
+  start_date: string
+  max_teams: number
+  registration_fee: number
+}
+import { MapPin, Phone, Mail, Clock, Wifi, Car, Users, Coffee, Trophy } from 'lucide-react'
 
 interface Props {
   params: { slug: string }
@@ -59,6 +56,14 @@ export default async function VenueDetailPage({ params }: Props) {
     if (courtType === 'Fútbol 11') return '11 vs 11'
     return null
   }
+
+  // Fetch upcoming/active tournaments for this venue
+  const { data: tournaments } = await supabase
+    .from('tournaments')
+    .select('*')
+    .eq('venue_id', venue.id)
+    .in('status', ['upcoming', 'registration_open', 'in_progress'])
+    .order('start_date', { ascending: true })
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -114,17 +119,6 @@ export default async function VenueDetailPage({ params }: Props) {
 
               {/* C. BARRA DE ACCIONES (Botones tipo FB) */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4">
-                {/* Botón Principal (Llamado a la acción) */}
-                <Button className="gap-2 font-semibold px-6">
-                  <Calendar className="h-4 w-4" />
-                  Reservar Ahora
-                </Button>
-
-                {/* Botones Secundarios (Gris claro) */}
-                <Button variant="secondary" className="gap-2 font-semibold text-foreground">
-                  <Share2 className="h-4 w-4" />
-                  Compartir
-                </Button>
                 {venue.phone && (
                   <Button
                     variant="secondary"
@@ -137,11 +131,6 @@ export default async function VenueDetailPage({ params }: Props) {
                     </a>
                   </Button>
                 )}
-
-                {/* Botón de menú/más opciones */}
-                <Button variant="secondary" size="icon" className="text-foreground">
-                  <Info className="h-5 w-5" />
-                </Button>
               </div>
             </div>
           </div>
@@ -171,6 +160,55 @@ export default async function VenueDetailPage({ params }: Props) {
               </p>
             </CardContent>
           </Card>
+        )}
+
+        {/* Novedades / Torneos */}
+        {tournaments && tournaments.length > 0 && (
+          <div id="torneos" className="animate-in fade-in duration-500">
+            <div className="mb-6 flex items-end justify-between">
+              <div>
+                <h2 className="text-2xl font-bold mb-1 flex items-center gap-2">
+                  <Trophy className="h-6 w-6 text-yellow-500" />
+                  Novedades y Torneos
+                </h2>
+                <p className="text-muted-foreground">Competí y demostrá tu nivel</p>
+              </div>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {tournaments.map((tournament: VenueTournament) => (
+                <Card
+                  key={tournament.id}
+                  className="overflow-hidden border-border/60 hover:shadow-md transition-all"
+                >
+                  <CardHeader className="bg-muted/40 pb-4 border-b">
+                    <CardTitle className="line-clamp-1">{tournament.name}</CardTitle>
+                    <p className="text-xs font-semibold text-primary uppercase tracking-wider">
+                      {tournament.status === 'upcoming'
+                        ? 'Próximamente'
+                        : tournament.status === 'registration_open'
+                          ? 'Inscripciones Abiertas'
+                          : 'En Curso'}
+                    </p>
+                  </CardHeader>
+                  <CardContent className="pt-4 flex flex-col justify-between h-full">
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                      {tournament.description || 'Torneo organizado por la sede.'}
+                    </p>
+
+                    <Link href={`/tournaments/${tournament.id}`} className="w-full mt-auto">
+                      <Button
+                        variant={tournament.status === 'registration_open' ? 'default' : 'outline'}
+                        className="w-full hover:scale-[1.02] transition-transform"
+                      >
+                        Ver Detalles
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Canchas Disponibles */}
