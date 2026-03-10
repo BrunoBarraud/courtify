@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     const { bookingId, subscriptionId, paymentMethod, currency = 'ARS' } = body
 
     const tenantId = request.headers.get('x-tenant-id')
-    let mpConfig: Record<string, any> | undefined = undefined
+    let mpConfig: Record<string, string> | undefined = undefined
 
     if (tenantId && paymentMethod === 'mercadopago') {
       const { data: venue, error: venueError } = await supabase
@@ -40,7 +40,10 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (venueError || !venue || !venue.mp_access_token_encrypted || !venue.mp_iv) {
-        return NextResponse.json({ error: 'Venue payment configuration not found' }, { status: 400 })
+        return NextResponse.json(
+          { error: 'Venue payment configuration not found' },
+          { status: 400 }
+        )
       }
       const accessToken = decrypt(venue.mp_access_token_encrypted, venue.mp_iv)
       mpConfig = { accessToken }
@@ -118,14 +121,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Create payment
-    const result = await paymentService.createPayment(paymentMethod, {
-      amount,
-      currency,
-      userId: session.user.id,
-      bookingId,
-      subscriptionId,
-      metadata: idempotencyKey ? { idempotencyKey } : undefined,
-    }, mpConfig)
+    const result = await paymentService.createPayment(
+      paymentMethod,
+      {
+        amount,
+        currency,
+        userId: session.user.id,
+        bookingId,
+        subscriptionId,
+        metadata: idempotencyKey ? { idempotencyKey } : undefined,
+      },
+      mpConfig
+    )
 
     if (!result.success) {
       // Notificación de error de pago para el jugador

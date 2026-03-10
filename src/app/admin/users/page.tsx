@@ -1,19 +1,29 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useCallback, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { toast } from 'sonner'
+
+interface User {
+  id: string
+  email: string
+  role: string
+}
+
+interface Venue {
+  id: string
+  name: string
+}
 
 export default function AdminUsersPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [users, setUsers] = useState<any[]>([])
-  const [venues, setVenues] = useState<any[]>([])
+  const [users, setUsers] = useState<User[]>([])
+  const [venues, setVenues] = useState<Venue[]>([])
 
   const [filter, setFilter] = useState('')
   const [savingRole, setSavingRole] = useState<string | null>(null)
@@ -25,7 +35,7 @@ export default function AdminUsersPage() {
     return users.filter(u => (u.email || '').toLowerCase().includes(q))
   }, [filter, users])
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -44,27 +54,11 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false)
     }
-
-    const onDeleteUser = async (userId: string, email?: string) => {
-      const ok = window.confirm(
-        `¿Eliminar al usuario ${email || userId}? Esta acción es permanente.`
-      )
-      if (!ok) return
-      try {
-        const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' })
-        const data = await res.json().catch(() => ({}))
-        if (!res.ok) throw new Error(data.error || 'No se pudo eliminar el usuario')
-        toast.success('Usuario eliminado')
-        await load()
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Error eliminando usuario')
-      }
-    }
-  }
+  }, [])
 
   useEffect(() => {
     load()
-  }, [])
+  }, [load])
 
   const onSetRole = async (userId: string, role: string) => {
     setSavingRole(userId)
@@ -175,7 +169,7 @@ export default function AdminUsersPage() {
                         <option value="" disabled>
                           Elegí una sede
                         </option>
-                        {venues.map((v: any) => (
+                        {venues.map((v: Venue) => (
                           <option key={v.id} value={v.id}>
                             {v.name}
                           </option>

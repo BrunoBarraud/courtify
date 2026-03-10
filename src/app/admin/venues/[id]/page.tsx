@@ -1,23 +1,56 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+export interface Venue {
+  id: string
+  name: string
+  address: string
+  city: string
+  country: string
+  slug: string
+  is_active: boolean
+}
+
+export interface Court {
+  id: string
+  name: string
+  court_type: string
+  is_indoor: boolean
+  hourly_rate: number
+}
+
+// Define interfaces for availability and blocks further down, or avoid inline an array of simple any
+export interface Rule {
+  day_of_week: string
+  start_time: string
+  end_time: string
+  price_override?: number
+}
+
+export interface BlockedPeriod {
+  id?: string
+  start_datetime: string
+  end_datetime: string
+  reason?: string
+}
+
 export default function AdminVenueDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const venueId = params?.id as string
 
-  const [venue, setVenue] = useState<any | null>(null)
-  const [courts, setCourts] = useState<any[]>([])
+  const [venue, setVenue] = useState<Venue | null>(null)
+  const [courts, setCourts] = useState<Court[]>([])
   const [selectedCourtId, setSelectedCourtId] = useState<string>('')
 
-  const [rules, setRules] = useState<any[]>([])
-  const [blocked, setBlocked] = useState<any[]>([])
+  const [rules, setRules] = useState<Rule[]>([])
+  const [blocked, setBlocked] = useState<BlockedPeriod[]>([])
   const [loadingRules, setLoadingRules] = useState(false)
   const [loadingBlocked, setLoadingBlocked] = useState(false)
 
@@ -31,7 +64,7 @@ export default function AdminVenueDetailPage() {
   const [hourlyRate, setHourlyRate] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -53,11 +86,11 @@ export default function AdminVenueDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [venueId])
 
   useEffect(() => {
     if (venueId) load()
-  }, [venueId])
+  }, [venueId, load])
 
   // Load rules and blocked periods when court changes
   useEffect(() => {
@@ -306,7 +339,7 @@ function AvailabilityRules({
   onChanged,
 }: {
   courtId: string
-  rules: any[]
+  rules: Rule[]
   loading: boolean
   onChanged: () => void
 }) {
@@ -325,7 +358,9 @@ function AvailabilityRules({
       // Validations
       if (!start || !end) throw new Error('Completá inicio y fin')
       if (end <= start) throw new Error('El fin debe ser mayor al inicio')
-      const overlaps = (rules || []).some((r: any) => r.day_of_week === day && !(end <= r.start_time || start >= r.end_time))
+      const overlaps = (rules || []).some(
+        (r: Rule) => r.day_of_week === day && !(end <= r.start_time || start >= r.end_time)
+      )
       if (overlaps) throw new Error('La regla se solapa con otra existente para ese día')
       const res = await fetch(`/api/courts/${courtId}/availability-rules`, {
         method: 'POST',
@@ -350,7 +385,7 @@ function AvailabilityRules({
     }
   }
 
-  const onDelete = async (r: any) => {
+  const onDelete = async (r: Rule) => {
     const res = await fetch(`/api/courts/${courtId}/availability-rules`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -447,7 +482,7 @@ function BlockedPeriods({
   onChanged,
 }: {
   courtId: string
-  items: any[]
+  items: BlockedPeriod[]
   loading: boolean
   onChanged: () => void
 }) {
@@ -491,7 +526,7 @@ function BlockedPeriods({
     }
   }
 
-  const onDelete = async (bp: any) => {
+  const onDelete = async (bp: BlockedPeriod) => {
     const res = await fetch(`/api/courts/${courtId}/blocked-periods`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
