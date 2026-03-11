@@ -157,11 +157,7 @@ export default function MobileNav() {
                     </span>
                   )}
                 </div>
-                {label === 'Notifs' ? (
-                  <span className="sr-only">{label}</span>
-                ) : (
-                  <span className="mt-1">{label}</span>
-                )}
+                <span className="mt-1">{label}</span>
               </Link>
             </li>
           )

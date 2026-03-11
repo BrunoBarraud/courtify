@@ -349,8 +349,10 @@ export default async function VenueDetailPage({ params }: Props) {
                 <h4 className="font-medium mb-2 flex items-center gap-2">
                   <Clock className="h-4 w-4" /> Horarios
                 </h4>
-                <p className="text-sm text-muted-foreground">Lun a Vie: 08:00 - 23:00</p>
-                <p className="text-sm text-muted-foreground">Sáb y Dom: 09:00 - 00:00</p>
+                <p className="text-sm text-muted-foreground">
+                  Todos los días: {venue.open_time?.substring(0, 5) || '08:00'} -{' '}
+                  {venue.close_time?.substring(0, 5) || '23:00'}
+                </p>
               </div>
             </CardContent>
           </Card>

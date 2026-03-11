@@ -300,6 +300,7 @@ export default function AdminVenueDetailPage() {
                               <AvailabilityRules
                                 courtId={c.id}
                                 rules={rules}
+                                venue={venue}
                                 loading={loadingRules}
                                 onChanged={async () => {
                                   const r = await fetch(`/api/courts/${c.id}/availability-rules`)
@@ -347,17 +348,20 @@ export default function AdminVenueDetailPage() {
 function AvailabilityRules({
   courtId,
   rules,
+  venue,
   loading,
   onChanged,
 }: {
   courtId: string
   rules: Rule[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  venue?: any
   loading: boolean
   onChanged: () => void
 }) {
   const [day, setDay] = useState('monday')
-  const [start, setStart] = useState('08:00')
-  const [end, setEnd] = useState('22:00')
+  const [start, setStart] = useState(venue?.open_time?.substring(0, 5) || '08:00')
+  const [end, setEnd] = useState(venue?.close_time?.substring(0, 5) || '22:00')
   const [price, setPrice] = useState('')
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)

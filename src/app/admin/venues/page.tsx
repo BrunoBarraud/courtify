@@ -25,6 +25,8 @@ export default function AdminVenuesPage() {
   const [address, setAddress] = useState('')
   const [city, setCity] = useState('')
   const [country, setCountry] = useState('')
+  const [openTime, setOpenTime] = useState('08:00')
+  const [closeTime, setCloseTime] = useState('23:00')
   const [saving, setSaving] = useState(false)
 
   const loadVenues = async () => {
@@ -54,7 +56,15 @@ export default function AdminVenuesPage() {
       const res = await fetch('/api/venues', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, address, city, country, is_active: true }),
+        body: JSON.stringify({
+          name,
+          address,
+          city,
+          country,
+          open_time: openTime,
+          close_time: closeTime,
+          is_active: true,
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'No se pudo crear la sede')
@@ -62,6 +72,8 @@ export default function AdminVenuesPage() {
       setAddress('')
       setCity('')
       setCountry('')
+      setOpenTime('08:00')
+      setCloseTime('23:00')
       await loadVenues()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error creando sede')
@@ -131,6 +143,28 @@ export default function AdminVenuesPage() {
                 disabled={saving}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="openTime">Horario de Apertura</Label>
+              <Input
+                id="openTime"
+                type="time"
+                value={openTime}
+                onChange={e => setOpenTime(e.target.value)}
+                required
+                disabled={saving}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="closeTime">Horario de Cierre</Label>
+              <Input
+                id="closeTime"
+                type="time"
+                value={closeTime}
+                onChange={e => setCloseTime(e.target.value)}
+                required
+                disabled={saving}
+              />
+            </div>
             <div className="md:col-span-2 flex justify-end gap-2">
               <Button type="submit" disabled={saving} className="shadow-sm">
                 {saving ? 'Creando...' : 'Crear Sede'}
@@ -153,15 +187,18 @@ export default function AdminVenuesPage() {
           ) : (
             <div className="grid gap-3">
               {venues.map(v => (
-                <div key={v.id} className="flex items-center justify-between p-3 border rounded-md">
-                  <div className="min-w-0">
+                <div
+                  key={v.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border rounded-md overflow-hidden"
+                >
+                  <div className="min-w-0 flex-1 w-full overflow-hidden">
                     <div className="font-semibold truncate">{v.name}</div>
                     <div className="text-sm text-muted-foreground truncate">
                       {v.address} • {v.city}, {v.country}
                     </div>
                   </div>
-                  <Link href={`/admin/venues/${v.id}`}>
-                    <Button variant="outline" size="sm">
+                  <Link href={`/admin/venues/${v.id}`} className="shrink-0 w-full sm:w-auto">
+                    <Button variant="outline" size="sm" className="w-full">
                       Gestionar
                     </Button>
                   </Link>
