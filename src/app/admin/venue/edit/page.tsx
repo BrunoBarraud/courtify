@@ -24,6 +24,8 @@ type Venue = {
   cover_image_url: string | null
   profile_image_url: string | null
   plus_code: string | null
+  open_time: string
+  close_time: string
   is_active: boolean
 }
 
@@ -47,6 +49,8 @@ export default function EditVenuePage() {
   const [coverImageUrl, setCoverImageUrl] = useState('')
   const [profileImageUrl, setProfileImageUrl] = useState('')
   const [plusCode, setPlusCode] = useState('')
+  const [openTime, setOpenTime] = useState('')
+  const [closeTime, setCloseTime] = useState('')
 
   useEffect(() => {
     loadVenue()
@@ -80,6 +84,8 @@ export default function EditVenuePage() {
       setCoverImageUrl(venueData.cover_image_url || '')
       setProfileImageUrl(venueData.profile_image_url || '')
       setPlusCode(venueData.plus_code || '')
+      setOpenTime(venueData.open_time || '08:00:00')
+      setCloseTime(venueData.close_time || '23:00:00')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error cargando sede')
     } finally {
@@ -111,6 +117,8 @@ export default function EditVenuePage() {
           cover_image_url: coverImageUrl || null,
           profile_image_url: profileImageUrl || null,
           plus_code: plusCode || null,
+          open_time: openTime,
+          close_time: closeTime,
         }),
       })
 
@@ -262,6 +270,29 @@ export default function EditVenuePage() {
                   onChange={e => setCountry(e.target.value)}
                   required
                   placeholder="Ej: Argentina"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="openTime">Horario de Apertura *</Label>
+                <Input
+                  id="openTime"
+                  type="time"
+                  value={openTime}
+                  onChange={e => setOpenTime(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="closeTime">Horario de Cierre *</Label>
+                <Input
+                  id="closeTime"
+                  type="time"
+                  value={closeTime}
+                  onChange={e => setCloseTime(e.target.value)}
+                  required
                 />
               </div>
             </div>

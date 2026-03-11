@@ -11,23 +11,44 @@ export class BookingService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private supabase = createAdminClient() as any
 
-  private getSlotConfig(courtType: string | null | undefined) {
+  private getSlotConfig(
+    courtType: string | null | undefined,
+    openTimeStr?: string,
+    closeTimeStr?: string
+  ) {
+    let defaultStartHour = 8
+    let defaultStartMinute = 0
+    let defaultEndHour = 22
+    let defaultEndMinute = 0
+    let slotMinutes = 60
+
     if (courtType === 'Pádel') {
-      return {
-        slotMinutes: 90,
-        defaultStartHour: 13,
-        defaultStartMinute: 0,
-        defaultEndHour: 23,
-        defaultEndMinute: 30,
-      }
+      slotMinutes = 90
+    }
+
+    if (openTimeStr) {
+      const [h, m] = openTimeStr.split(':').map(Number)
+      if (!isNaN(h)) defaultStartHour = h
+      if (!isNaN(m)) defaultStartMinute = m
+    } else if (courtType === 'Pádel') {
+      defaultStartHour = 13
+    }
+
+    if (closeTimeStr) {
+      const [h, m] = closeTimeStr.split(':').map(Number)
+      if (!isNaN(h)) defaultEndHour = h
+      if (!isNaN(m)) defaultEndMinute = m
+    } else if (courtType === 'Pádel') {
+      defaultEndHour = 23
+      defaultEndMinute = 30
     }
 
     return {
-      slotMinutes: 60,
-      defaultStartHour: 8,
-      defaultStartMinute: 0,
-      defaultEndHour: 22,
-      defaultEndMinute: 0,
+      slotMinutes,
+      defaultStartHour,
+      defaultStartMinute,
+      defaultEndHour,
+      defaultEndMinute,
     }
   }
 
@@ -85,7 +106,12 @@ export class BookingService {
       .lte('end_datetime', endOfDay.toISOString())
 
     // Generate time slots
-    const slotConfig = this.getSlotConfig((court as { court_type?: string } | null)?.court_type)
+    const venue = (court as { venue?: { open_time?: string; close_time?: string } | null })?.venue
+    const slotConfig = this.getSlotConfig(
+      (court as { court_type?: string } | null)?.court_type,
+      venue?.open_time,
+      venue?.close_time
+    )
     const slots = this.generateTimeSlots(
       rules || [],
       bookings || [],
@@ -242,7 +268,10 @@ export class BookingService {
 
     // Add participants if provided
     if (participants.length > 0) {
-      if (pricingRule && String((pricingRule as Record<string, unknown>)?.pricing_mode) === 'per_person') {
+      if (
+        pricingRule &&
+        String((pricingRule as Record<string, unknown>)?.pricing_mode) === 'per_person'
+      ) {
         const rows = [] as Array<Record<string, unknown>>
 
         for (const p of participants) {
@@ -333,20 +362,22 @@ export class BookingService {
 
     if (admins && admins.length > 0) {
       interface ProfileAdmin {
-        id: string;
-        role: string;
-        venue_admins: Array<{ venue_id: string }>;
+        id: string
+        role: string
+        venue_admins: Array<{ venue_id: string }>
       }
 
       // Filter out venue_admins that do NOT belong to this venue
       const targetAdmins = admins.filter((admin: ProfileAdmin) => {
-        if (admin.role === 'super_admin') return true;
+        if (admin.role === 'super_admin') return true
         // If venue_admin, check if they are linked to the booked venue
         if (admin.venue_admins && admin.venue_admins.length > 0) {
-          return admin.venue_admins.some((va: { venue_id: string }) => va.venue_id === court.venue.id);
+          return admin.venue_admins.some(
+            (va: { venue_id: string }) => va.venue_id === court.venue.id
+          )
         }
-        return false;
-      });
+        return false
+      })
 
       await Promise.allSettled(
         targetAdmins.map((admin: { id: string }) =>

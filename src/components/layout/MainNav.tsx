@@ -88,7 +88,9 @@ const MainNav = () => {
         <div className="ml-auto flex items-center space-x-4">
           {isAuthed ? (
             <>
-              <NotificationsBell />
+              <div className="hidden md:block">
+                <NotificationsBell />
+              </div>
               <UserMenu />
             </>
           ) : (

@@ -132,6 +132,8 @@ export interface Database {
           cover_image_url: string | null
           amenities: Json
           opening_hours: Json
+          open_time: string
+          close_time: string
           is_active: boolean
           metadata: Json
           created_at: string
@@ -156,6 +158,8 @@ export interface Database {
           cover_image_url?: string | null
           amenities?: Json
           opening_hours?: Json
+          open_time?: string
+          close_time?: string
           is_active?: boolean
           metadata?: Json
           created_at?: string
@@ -180,6 +184,8 @@ export interface Database {
           cover_image_url?: string | null
           amenities?: Json
           opening_hours?: Json
+          open_time?: string
+          close_time?: string
           is_active?: boolean
           metadata?: Json
           created_at?: string

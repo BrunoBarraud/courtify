@@ -177,11 +177,12 @@ export default function AdminUsersPage() {
                       </select>
                     </div>
 
-                    <div>
-                      <div className="flex gap-2">
+                    <div className="pt-2 md:pt-0">
+                      <div className="flex flex-col xl:flex-row gap-2">
                         <Button
                           variant="outline"
                           size="sm"
+                          className="w-full xl:w-auto"
                           onClick={() => router.push(`/admin/users/${u.id}/permissions`)}
                         >
                           Gestionar permisos
@@ -189,6 +190,7 @@ export default function AdminUsersPage() {
                         <Button
                           variant="destructive"
                           size="sm"
+                          className="w-full xl:w-auto"
                           //onClick={() => onDeleteUser(u.id, u.email)}
                           disabled={savingRole === u.id || savingVenue?.startsWith(u.id)}
                         >

@@ -27,7 +27,9 @@ export default function NotificationsPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/notifications?limit=20&offset=${opts?.append ? offset : 0}`, { cache: 'no-store' })
+      const res = await fetch(`/api/notifications?limit=20&offset=${opts?.append ? offset : 0}`, {
+        cache: 'no-store',
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'No se pudieron cargar las notificaciones')
       if (opts?.append) {
@@ -36,7 +38,7 @@ export default function NotificationsPage() {
         setItems(data.notifications || [])
       }
       setUnread(data.unread || 0)
-      const total = typeof data.total === 'number' ? data.total : (data.notifications?.length || 0)
+      const total = typeof data.total === 'number' ? data.total : data.notifications?.length || 0
       const newOffset = (opts?.append ? offset : 0) + 20
       setOffset(newOffset)
       setHasMore(newOffset < total)
@@ -86,17 +88,27 @@ export default function NotificationsPage() {
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-xl font-bold">Notificaciones</h1>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">No leídas: {unread}</span>
-          <Button variant="outline" onClick={markAllRead} disabled={loading || unread === 0}>
+        <div className="flex flex-wrap items-center gap-4">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            No leídas: {unread}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={markAllRead}
+            disabled={loading || unread === 0}
+            className="whitespace-nowrap"
+          >
             Marcar todo como leído
           </Button>
         </div>
       </div>
 
-      {error && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>}
+      {error && (
+        <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">{error}</div>
+      )}
 
       {loading ? (
         <div className="text-sm text-muted-foreground">Cargando...</div>
@@ -105,12 +117,18 @@ export default function NotificationsPage() {
       ) : (
         <div className="space-y-2">
           {items.map(n => (
-            <div key={n.id} className={`p-3 border rounded-md ${n.read_at ? '' : 'bg-muted/40'} cursor-pointer`} onClick={() => onItemClick(n)}>
+            <div
+              key={n.id}
+              className={`p-3 border rounded-md ${n.read_at ? '' : 'bg-muted/40'} cursor-pointer`}
+              onClick={() => onItemClick(n)}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-sm font-medium">{n.title || 'Notificación'}</div>
                   <div className="text-sm text-muted-foreground">{n.body}</div>
-                  <div className="text-[10px] text-muted-foreground mt-1">{n.sent_at ? new Date(n.sent_at).toLocaleString('es-AR') : ''}</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">
+                    {n.sent_at ? new Date(n.sent_at).toLocaleString('es-AR') : ''}
+                  </div>
                 </div>
                 {!n.read_at && (
                   <Button size="sm" variant="secondary" onClick={() => markOneRead(n.id)}>
@@ -121,7 +139,11 @@ export default function NotificationsPage() {
             </div>
           ))}
           <div className="flex justify-center pt-2">
-            <Button variant="outline" onClick={() => load({ append: true })} disabled={!hasMore || loading}>
+            <Button
+              variant="outline"
+              onClick={() => load({ append: true })}
+              disabled={!hasMore || loading}
+            >
               {hasMore ? 'Cargar más' : 'No hay más'}
             </Button>
           </div>
